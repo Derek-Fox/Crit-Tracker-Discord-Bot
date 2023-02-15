@@ -1,34 +1,27 @@
+# bot.py
 import os
+import random
 
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
 intents = discord.Intents(messages=True, guilds=True)
+intents.message_content = True
+
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 
-client = discord.Client(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-@client.event
-async def on_ready():
-    guild = discord.utils.get(client.guilds, name=GUILD)
+@bot.command(name='add')
+async def add(ctx, crit_type):
+
+    if crit_type == '20':
+        response = '20 added'
+    elif crit_type == '1':
+        response = '1 added'
         
-    print(
-        f'{client.user} has connected to guild: \n'
-        f'{guild.name}(id: {guild.id})'
-    )
-    
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    
-    if message.content == 'add 20':
-        await message.channel.send('20 added')
-        
+    await ctx.send(response)
 
-client.run(TOKEN)
-
-
-
+bot.run(TOKEN)
