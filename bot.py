@@ -53,7 +53,10 @@ def get_values(spreadsheet_id, range_name, creds):
         print(f"An error occurred: {error}")
         return error
     
-
+def get_and_update(cell, creds):
+    value = get_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, creds).get('values', [])
+    
+    update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
 
 intents = discord.Intents(messages=True, guilds=True)
 intents.message_content = True
@@ -65,11 +68,8 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 
 @bot.command(name='add')
 async def add(ctx, crit_type, char_name):
-    
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
+   
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     # If there are no (valid) credentials available, let the user log in.
@@ -84,14 +84,28 @@ async def add(ctx, crit_type, char_name):
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    value = get_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", "J1", creds).get('values', [])
     
-    update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", "J1", "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
-
+    cell = ""
+    match char_name.upper():
+        case "ZOHAR":
+            cell = "2"
+        case "MORBO":
+            cell = "3"
+        case "GRUNT":
+            cell = "4"
+        case "CELEMINE":
+            cell = "5"
+        case "ORWYND":
+            cell = "6"
+        
     if crit_type == '20':
-        response = '20 added'
+        cell = "B" + cell
+        response = '20 added! B)'
     elif crit_type == '1':
-        response = '1 added'
+        cell = "C" + cell
+        response = '1 added :('
+    
+    get_and_update(cell, creds)
         
     await ctx.send(response)
 
