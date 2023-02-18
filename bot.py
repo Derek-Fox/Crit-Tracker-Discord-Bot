@@ -57,6 +57,8 @@ def get_and_update(cell, creds):
     value = get_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, creds).get('values', [])
     
     update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
+    
+    return int(value[0][0]) + 1
 
 intents = discord.Intents(messages=True, guilds=True)
 intents.message_content = True
@@ -105,7 +107,9 @@ async def add(ctx, crit_type, char_name):
         cell = "C" + cell
         response = '1 added :('
     
-    get_and_update(cell, creds)
+    num_crits = get_and_update(cell, creds)
+    
+    response = response + "\n" + char_name + " now has " + str(num_crits) + " " + str(crit_type) + "s!"
         
     await ctx.send(response)
 
