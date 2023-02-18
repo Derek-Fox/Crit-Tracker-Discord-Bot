@@ -26,12 +26,7 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values, creds
     try:
 
         service = build('sheets', 'v4', credentials=creds)
-        values = [
-            [
-                
-            ],
-            
-        ]
+       
         body = {
             'values': _values
         }
@@ -43,6 +38,21 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values, creds
     except HttpError as error:
         print(f"An error occurred: {error}")
         return error
+    
+def get_values(spreadsheet_id, range_name, creds):
+    
+    try:
+        service = build('sheets', 'v4', credentials=creds)
+
+        result = service.spreadsheets().values().get(
+            spreadsheetId=spreadsheet_id, range=range_name).execute()
+        rows = result.get('values', [])
+        print(f"{len(rows)} rows retrieved")
+        return result
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return error
+    
 
 
 intents = discord.Intents(messages=True, guilds=True)
@@ -54,7 +64,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 bot = commands.Bot(command_prefix='$', intents=intents)
 
 @bot.command(name='add')
-async def add(ctx, crit_type):
+async def add(ctx, crit_type, char_name):
     
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -74,11 +84,11 @@ async def add(ctx, crit_type):
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", "J1:J2", "USER_ENTERED", [['A']], creds)
-
+    value = get_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", "J1", creds).get('values', [])
+    
+    update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", "J1", "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
 
     if crit_type == '20':
-        
         response = '20 added'
     elif crit_type == '1':
         response = '1 added'
