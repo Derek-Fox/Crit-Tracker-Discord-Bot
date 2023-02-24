@@ -1,23 +1,18 @@
 from __future__ import print_function
 
-import google.auth
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
+import os
 import os.path
+import random
 
+import discord
+import google.auth
+from discord.ext import commands
+from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
-import os
-import random
-
-import discord
-from discord.ext import commands
-from dotenv import load_dotenv
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
