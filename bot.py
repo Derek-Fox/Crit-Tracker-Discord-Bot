@@ -53,6 +53,8 @@ def get_and_update(cell, creds):
     
     update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
     
+    print(f"{cell} updated!")
+    
     return int(value[0][0]) + 1
 
 intents = discord.Intents(messages=True, guilds=True)
@@ -81,7 +83,7 @@ async def add(ctx, crit_type, char_name):
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    
+    worked = True
     cell = ""
     match char_name.upper():
         case "ZOHAR":
@@ -94,17 +96,27 @@ async def add(ctx, crit_type, char_name):
             cell = "5"
         case "ORWYND":
             cell = "6"
-        
-    if crit_type == '20':
-        cell = "B" + cell
-        response = '20 added! B)'
-    elif crit_type == '1':
-        cell = "C" + cell
-        response = '1 added :('
+        case "BORMOD":
+            cell = "9"
+        case "OATMEAL":
+            cell = "10"
+        case _:
+            response = "Please enter a valid character name!"
+            worked = False
+    if worked:  
+        if crit_type == '20':
+            cell = "B" + cell
+            response = '20 added! B)'
+        elif crit_type == '1':
+            cell = "C" + cell
+            response = '1 added :('
+        else:
+            response = "Please enter a valid crit type!"
+            worked = False
     
-    num_crits = get_and_update(cell, creds)
-    
-    response = response + "\n" + char_name + " now has " + str(num_crits) + " " + str(crit_type) + "s!"
+    if worked:
+        num_crits = get_and_update(cell, creds)
+        response = f"{response}\n{char_name} now has {num_crits} {crit_type}s!"
         
     await ctx.send(response)
 
