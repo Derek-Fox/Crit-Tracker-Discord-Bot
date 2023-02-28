@@ -17,11 +17,8 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 def update_values(spreadsheet_id, range_name, value_input_option, _values, creds):
-    
     try:
-
         service = build('sheets', 'v4', credentials=creds)
-       
         body = {
             'values': _values
         }
@@ -35,10 +32,8 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values, creds
         return error
     
 def get_values(spreadsheet_id, range_name, creds):
-    
     try:
         service = build('sheets', 'v4', credentials=creds)
-
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id, range=range_name).execute()
         rows = result.get('values', [])
@@ -113,7 +108,6 @@ async def add(ctx, crit_type, char_name):
         else:
             response = "Please enter a valid crit type!"
             worked = False
-    
     if worked:
         num_crits = get_and_update(cell, creds)
         response = f"{response}\n{char_name} now has {num_crits} {crit_type}s!"
