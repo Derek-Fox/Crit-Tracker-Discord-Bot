@@ -38,9 +38,9 @@ if not CREDS or not CREDS.valid:
         token.write(CREDS.to_json())
 
 
-def update_values(spreadsheet_id, range_name, value_input_option, _values, creds):
+def update_values(spreadsheet_id, range_name, value_input_option, _values):
     try:
-        service = build('sheets', 'v4', credentials=creds)
+        service = build('sheets', 'v4', credentials=CREDS)
         body = {
             'values': _values
         }
@@ -54,9 +54,9 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values, creds
         return error
 
 
-def get_values(spreadsheet_id, range_name, creds):
+def get_values(spreadsheet_id, range_name):
     try:
-        service = build('sheets', 'v4', credentials=creds)
+        service = build('sheets', 'v4', credentials=CREDS)
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id, range=range_name).execute()
         rows = result.get('values', [])
@@ -67,11 +67,11 @@ def get_values(spreadsheet_id, range_name, creds):
         return error
 
 
-def get_and_update(cell, creds):
-    value = get_values(SHEET_ID, cell, creds).get('values', [])
+def get_and_update(cell):
+    value = get_values(SHEET_ID, cell).get('values', [])
 
     update_values(SHEET_ID, cell, "USER_ENTERED",
-                  [[int(value[0][0]) + 1]], creds)
+                  [[int(value[0][0]) + 1]])
 
     print(f"{cell} updated!")
 
@@ -111,7 +111,7 @@ async def add(ctx, crit_type, char_name):
         await ctx.send("Please enter a valid crit type!")
         return
 
-    num_crits = get_and_update(cell, CREDS)
+    num_crits = get_and_update(cell)
     response = f"{response}\n{char_name} now has {num_crits} {crit_type}s!"
 
     await ctx.send(response)
