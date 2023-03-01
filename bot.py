@@ -1,3 +1,4 @@
+"""Discord bot to allow access to spreadsheet containing crits directly from the server"""
 from __future__ import print_function
 
 import os
@@ -47,12 +48,13 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values):
     """Updates values on the spreadsheet in the given range with given values"""
     try:
         service = build('sheets', 'v4', credentials=CREDS)
-        body = {
-            'values': _values
-        }
+        body = {'values': _values}
         result = service.spreadsheets().values().update(
-            spreadsheetId=spreadsheet_id, range=range_name,
-            valueInputOption=value_input_option, body=body).execute()
+            spreadsheetId=spreadsheet_id,
+            range=range_name,
+            valueInputOption=value_input_option,
+            body=body
+        ).execute()
         print(f"{result.get('updatedCells')} cells updated.")
         return result
     except HttpError as error:
@@ -65,7 +67,9 @@ def get_values(spreadsheet_id, range_name):
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         result = service.spreadsheets().values().get(
-            spreadsheetId=spreadsheet_id, range=range_name).execute()
+            spreadsheetId=spreadsheet_id,
+            range=range_name
+        ).execute()
         rows = result.get('values', [])
         print(f"{len(rows)} rows retrieved")
         return result
@@ -94,8 +98,12 @@ async def session(ctx):
 
 
 @bot.command(name='add', help="Adds a crit of the specified type to the specified character.")
-async def add(ctx, crit_type: str = commands.parameter(description="Type of crit, 1 or 20"),
-              char_name: str = commands.parameter(description="Name of character, e.g. Morbo")):
+async def add(
+    ctx,
+    crit_type: str = commands.parameter(description="Type of crit, 1 or 20"),
+    char_name: str = commands.parameter(
+        description="Name of character, e.g. Morbo")
+):
     """Adds a crit of the specified type to the specified character."""
     cell = ""
     match char_name.upper():
