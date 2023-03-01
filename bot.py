@@ -44,9 +44,9 @@ def get_values(spreadsheet_id, range_name, creds):
         return error
     
 def get_and_update(cell, creds):
-    value = get_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, creds).get('values', [])
+    value = get_values(SHEET_ID, cell, creds).get('values', [])
     
-    update_values("1FWsrc8M03umsn2uBBERj7my-HyaxXepMsSv25-8kVz8", cell, "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
+    update_values(SHEET_ID, cell, "USER_ENTERED", [[int(value[0][0]) + 1]], creds)
     
     print(f"{cell} updated!")
     
@@ -57,6 +57,7 @@ intents.message_content = True
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+SHEET_ID = os.getenv('SHEET_ID')
 
 bot = commands.Bot(command_prefix='$', intents=intents)
 
