@@ -133,8 +133,8 @@ async def add(
             await ctx.send('>>> Please enter a valid character name!')
             return
 
-    sad_emoji = [i for i in '😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫']
-    happy_emoji = [i for i in '😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏']
+    sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
+    happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
     if crit_type == '20':
         cell = 'B' + cell
         embed.title = f'20 added! {random.choice(happy_emoji)}'
