@@ -19,7 +19,12 @@ SHEET_ID = os.getenv('SHEET_ID')
 INTENTS = discord.Intents(messages=True, guilds=True)
 INTENTS.message_content = True
 
-bot = commands.Bot(command_prefix='$', intents=INTENTS)
+bot = commands.Bot(
+    command_prefix='$',
+    intents=INTENTS,
+    description="This bot will add crits directly to the spreadsheet for you!",
+    help_command=commands.DefaultHelpCommand(no_category='Commands')
+)
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 CREDS = None
@@ -39,6 +44,7 @@ if not CREDS or not CREDS.valid:
 
 
 def update_values(spreadsheet_id, range_name, value_input_option, _values):
+    """Updates values on the spreadsheet in the given range with given values"""
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         body = {
@@ -55,6 +61,7 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values):
 
 
 def get_values(spreadsheet_id, range_name):
+    """Returns values from the spreadsheet from the specified range"""
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         result = service.spreadsheets().values().get(
@@ -68,6 +75,7 @@ def get_values(spreadsheet_id, range_name):
 
 
 def get_and_update(cell):
+    """Increments the value of the given cell by 1."""
     value = get_values(SHEET_ID, cell).get('values', [])
 
     update_values(SHEET_ID, cell, "USER_ENTERED",
@@ -78,9 +86,17 @@ def get_and_update(cell):
     return int(value[0][0]) + 1
 
 
-@bot.command(name='add')
-async def add(ctx, crit_type, char_name):
+@bot.command(name='session', help="Increments the session number by one.")
+async def session(ctx):
+    """Increments the session number by 1"""
+    new_session_number = get_and_update("H2")
+    await ctx.send(f"Session number is now {new_session_number}")
 
+
+@bot.command(name='add', help="Adds a crit of the specified type to the specified character.")
+async def add(ctx, crit_type: str = commands.parameter(description="Type of crit, 1 or 20"),
+              char_name: str = commands.parameter(description="Name of character, e.g. Morbo")):
+    """Adds a crit of the specified type to the specified character."""
     cell = ""
     match char_name.upper():
         case "ZOHAR":
