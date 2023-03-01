@@ -1,4 +1,4 @@
-"""Discord bot to allow access to spreadsheet containing crits directly from the server"""
+'''Discord bot to allow access to spreadsheet containing crits directly from the server'''
 from __future__ import print_function
 
 import os
@@ -23,7 +23,7 @@ INTENTS.message_content = True
 bot = commands.Bot(
     command_prefix='$',
     intents=INTENTS,
-    description="This bot will add crits directly to the spreadsheet for you!",
+    description='This bot will add crits directly to the spreadsheet for you!',
     help_command=commands.DefaultHelpCommand(no_category='Commands')
 )
 
@@ -45,7 +45,7 @@ if not CREDS or not CREDS.valid:
 
 
 def update_values(spreadsheet_id, range_name, value_input_option, _values):
-    """Updates values on the spreadsheet in the given range with given values"""
+    '''Updates values on the spreadsheet in the given range with given values'''
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         body = {'values': _values}
@@ -55,15 +55,15 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values):
             valueInputOption=value_input_option,
             body=body
         ).execute()
-        print(f"{result.get('updatedCells')} cells updated.")
+        print(f'{result.get("updatedCells")} cells updated.')
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        print(f'An error occurred: {error}')
         return error
 
 
 def get_values(spreadsheet_id, range_name):
-    """Returns values from the spreadsheet from the specified range"""
+    '''Returns values from the spreadsheet from the specified range'''
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         result = service.spreadsheets().values().get(
@@ -71,72 +71,72 @@ def get_values(spreadsheet_id, range_name):
             range=range_name
         ).execute()
         rows = result.get('values', [])
-        print(f"{len(rows)} rows retrieved")
+        print(f'{len(rows)} rows retrieved')
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        print(f'An error occurred: {error}')
         return error
 
 
 def get_and_update(cell):
-    """Increments the value of the given cell by 1."""
+    '''Increments the value of the given cell by 1.'''
     value = get_values(SHEET_ID, cell).get('values', [])
 
-    update_values(SHEET_ID, cell, "USER_ENTERED",
+    update_values(SHEET_ID, cell, 'USER_ENTERED',
                   [[int(value[0][0]) + 1]])
 
-    print(f"{cell} updated!")
+    print(f'{cell} updated!')
 
     return int(value[0][0]) + 1
 
 
-@bot.command(name='session', help="Increments the session number by one.")
+@bot.command(name='session', help='Increments the session number by one.')
 async def session(ctx):
-    """Increments the session number by 1"""
-    new_session_number = get_and_update("H2")
-    await ctx.send(f"Session number is now {new_session_number}")
+    '''Increments the session number by 1'''
+    new_session_number = get_and_update('H2')
+    await ctx.send(f'Session number is now {new_session_number}')
 
 
-@bot.command(name='add', help="Adds a crit of the specified type to the specified character.")
+@bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
 async def add(
     ctx,
-    crit_type: str = commands.parameter(description="Type of crit, 1 or 20"),
+    crit_type: str = commands.parameter(description='Type of crit, 1 or 20'),
     char_name: str = commands.parameter(
-        description="Name of character, e.g. Morbo")
+        description='Name of character, e.g. Morbo')
 ):
-    """Adds a crit of the specified type to the specified character."""
-    cell = ""
+    '''Adds a crit of the specified type to the specified character.'''
+    cell = ''
     match char_name.upper():
-        case "ZOHAR":
-            cell = "2"
-        case "MORBO":
-            cell = "3"
-        case "GRUNT":
-            cell = "4"
-        case "CELEMINE":
-            cell = "5"
-        case "ORWYND":
-            cell = "6"
-        case "BORMOD":
-            cell = "9"
-        case "OATMEAL":
-            cell = "10"
+        case 'ZOHAR':
+            cell = '2'
+        case 'MORBO':
+            cell = '3'
+        case 'GRUNT':
+            cell = '4'
+        case 'CELEMINE':
+            cell = '5'
+        case 'ORWYND':
+            cell = '6'
+        case 'BORMOD':
+            cell = '9'
+        case 'OATMEAL':
+            cell = '10'
         case _:
-            await ctx.send("Please enter a valid character name!")
+            await ctx.send('Please enter a valid character name!')
             return
 
     if crit_type == '20':
-        cell = "B" + cell
+        cell = 'B' + cell
         response = '20 added! B)'
     elif crit_type == '1':
-        cell = "C" + cell
+        cell = 'C' + cell
         response = '1 added :('
     else:
-        await ctx.send("Please enter a valid crit type!")
+        await ctx.send('Please enter a valid crit type!')
         return
 
     num_crits = get_and_update(cell)
-    response = f"{response}\n{char_name} now has {num_crits} {crit_type}s!"
+    response = f'{response}\n{char_name} now has {num_crits} {crit_type}s!'
 
     await ctx.send(response)
 
