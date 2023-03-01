@@ -146,8 +146,7 @@ async def add(
         return
 
     num_crits = get_and_update(cell)
-    num_crit_str = num2words(num_crits)
-    embed.description = f'{char_name} now has {num_crit_str} {crit_type}s!'
+    embed.description = f'{char_name} now has {num2words(num_crits)} {crit_type}s!'
 
     await ctx.send(embed=embed)
 
