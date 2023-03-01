@@ -91,6 +91,11 @@ def get_and_update(cell):
 
     return int(value[0][0]) + 1
 
+@bot.event
+async def on_ready():
+    '''Sets up the bot's status'''
+    game = discord.Game('$help')
+    await bot.change_presence(status=discord.Status.dnd, activity=game)
 
 @bot.command(name='session', help='Increments the session number by one.')
 async def session(ctx):
