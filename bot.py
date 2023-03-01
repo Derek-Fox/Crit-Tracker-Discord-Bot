@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import os.path
 import random
+from num2words import num2words
 
 import discord
 from discord.ext import commands
@@ -107,17 +108,23 @@ async def add(
 ):
     '''Adds a crit of the specified type to the specified character.'''
     cell = ''
+    embed = discord.Embed()
     match char_name.upper():
         case 'ZOHAR':
             cell = '2'
+            embed.color = 0x8E7CC3
         case 'MORBO':
             cell = '3'
+            embed.color = 0x38761D
         case 'GRUNT':
             cell = '4'
+            embed.color = 0x000000
         case 'CELEMINE':
             cell = '5'
+            embed.color = 0x351C75
         case 'ORWYND':
             cell = '6'
+            embed.color = 0xEB7AB1
         case 'BORMOD':
             cell = '9'
         case 'OATMEAL':
@@ -130,17 +137,18 @@ async def add(
     happy_emoji = [i for i in '😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏']
     if crit_type == '20':
         cell = 'B' + cell
-        response = f'>>> 20 added! {random.choice(happy_emoji)}'
+        embed.title = f'20 added! {random.choice(happy_emoji)}'
     elif crit_type == '1':
         cell = 'C' + cell
-        response = f'>>> 1 added {random.choice(sad_emoji)}'
+        embed.title = f'1 added {random.choice(sad_emoji)}'
     else:
         await ctx.send('>>> Please enter a valid crit type!')
         return
 
     num_crits = get_and_update(cell)
-    response = f'>>> {response}\n{char_name} now has {num_crits} {crit_type}s!'
+    num_crit_str = num2words(num_crits)
+    embed.description = f'{char_name} now has {num_crit_str} {crit_type}s!'
 
-    await ctx.send(response)
+    await ctx.send(embed=embed)
 
 bot.run(TOKEN)
