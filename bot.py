@@ -123,23 +123,23 @@ async def add(
         case 'OATMEAL':
             cell = '10'
         case _:
-            await ctx.send('Please enter a valid character name!')
+            await ctx.send('>>> Please enter a valid character name!')
             return
 
     sad_emoji = [i for i in '😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫']
     happy_emoji = [i for i in '😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏']
     if crit_type == '20':
         cell = 'B' + cell
-        response = f'20 added! {random.choice(happy_emoji)}'
+        response = f'>>> 20 added! {random.choice(happy_emoji)}'
     elif crit_type == '1':
         cell = 'C' + cell
-        response = f'1 added {random.choice(sad_emoji)}'
+        response = f'>>> 1 added {random.choice(sad_emoji)}'
     else:
-        await ctx.send('Please enter a valid crit type!')
+        await ctx.send('>>> Please enter a valid crit type!')
         return
 
     num_crits = get_and_update(cell)
-    response = f'{response}\n{char_name} now has {num_crits} {crit_type}s!'
+    response = f'>>> {response}\n{char_name} now has {num_crits} {crit_type}s!'
 
     await ctx.send(response)
 
