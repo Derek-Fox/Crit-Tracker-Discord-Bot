@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import os
 import os.path
+import random
 
 import discord
 from discord.ext import commands
@@ -125,12 +126,14 @@ async def add(
             await ctx.send('Please enter a valid character name!')
             return
 
+    sad_emoji = [i for i in '😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫']
+    happy_emoji = [i for i in '😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏']
     if crit_type == '20':
         cell = 'B' + cell
-        response = '20 added! B)'
+        response = f'20 added! {random.choice(happy_emoji)}'
     elif crit_type == '1':
         cell = 'C' + cell
-        response = '1 added :('
+        response = f'1 added {random.choice(sad_emoji)}'
     else:
         await ctx.send('Please enter a valid crit type!')
         return
