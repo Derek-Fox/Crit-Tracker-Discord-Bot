@@ -1,4 +1,4 @@
-'''Discord bot to allow access to spreadsheet containing crits directly from the server'''
+"""Discord bot to allow access to spreadsheet containing crits directly from the server"""
 from __future__ import print_function
 
 import os
@@ -47,7 +47,7 @@ if not CREDS or not CREDS.valid:
 
 
 def update_values(spreadsheet_id, range_name, value_input_option, _values):
-    '''Updates values on the spreadsheet in the given range with given values'''
+    """Updates values on the spreadsheet in the given range with given values"""
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         body = {'values': _values}
@@ -65,7 +65,7 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values):
 
 
 def get_values(spreadsheet_id, range_name):
-    '''Returns values from the spreadsheet from the specified range'''
+    """Returns values from the spreadsheet from the specified range"""
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         result = service.spreadsheets().values().get(
@@ -81,7 +81,7 @@ def get_values(spreadsheet_id, range_name):
 
 
 def get_and_update(cell):
-    '''Increments the value of the given cell by 1.'''
+    """Increments the value of the given cell by 1."""
     value = get_values(SHEET_ID, cell).get('values', [])
 
     update_values(SHEET_ID, cell, 'USER_ENTERED',
@@ -94,17 +94,17 @@ def get_and_update(cell):
 
 @bot.event
 async def on_ready():
-    '''Sets up the bot's status'''
+    """Sets up the bot's status"""
     game = discord.Game('$help')
     await bot.change_presence(status=discord.Status.dnd, activity=game)
 
 
 @bot.command(name='session', help='Increments the session number by one.')
 async def session(ctx):
-    '''Increments the session number by 1'''
+    """Increments the session number by 1"""
     new_session_number = get_and_update('H2')
     await ctx.send(
-        embed=discord.Embed(title=f"Session number is now {new_session_number}",
+        embed=discord.Embed(title=f'Session number is now {new_session_number}',
         color=0xA2C4C9)
         )
 
@@ -113,10 +113,9 @@ async def session(ctx):
 async def add(
     ctx,
     crit_type: str = commands.parameter(description='Type of crit, 1 or 20'),
-    char_name: str = commands.parameter(
-        description='Name of character, e.g. Morbo')
+    char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
 ):
-    '''Adds a crit of the specified type to the specified character.'''
+    """Adds a crit of the specified type to the specified character."""
     cell = ''
     embed = discord.Embed()
     match char_name.upper():
@@ -140,8 +139,8 @@ async def add(
         case 'OATMEAL':
             cell = '10'
         case _:
-            embed.title = "**Error** ⚠️"
-            embed.description = f"Received {char_name}, which is not a valid character name. Please try again."
+            embed.title = '**Error** ⚠️'
+            embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
             embed.color = discord.Color.red()
             await ctx.send(embed=embed)
             return
@@ -155,8 +154,8 @@ async def add(
         cell = 'C' + cell
         embed.title = f'1 added {random.choice(sad_emoji)}'
     else:
-        embed.title = "**Error** ⚠️"
-        embed.description = f"Received {crit_type}, which is not a valid crit type. Please try again."
+        embed.title = '**Error** ⚠️'
+        embed.description = f'Received {crit_type}, which is not a valid crit type. Please try again.'
         embed.color = discord.Color.red()
         await ctx.send(embed=embed)
         return
