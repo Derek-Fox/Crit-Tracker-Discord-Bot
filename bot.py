@@ -103,7 +103,10 @@ async def on_ready():
 async def session(ctx):
     '''Increments the session number by 1'''
     new_session_number = get_and_update('H2')
-    await ctx.send(f'Session number is now {new_session_number}')
+    await ctx.send(
+        embed=discord.Embed(title=f"Session number is now {new_session_number}",
+        color=0xA2C4C9)
+        )
 
 
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
