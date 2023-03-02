@@ -91,11 +91,13 @@ def get_and_update(cell):
 
     return int(value[0][0]) + 1
 
+
 @bot.event
 async def on_ready():
     '''Sets up the bot's status'''
     game = discord.Game('$help')
     await bot.change_presence(status=discord.Status.dnd, activity=game)
+
 
 @bot.command(name='session', help='Increments the session number by one.')
 async def session(ctx):
@@ -135,7 +137,10 @@ async def add(
         case 'OATMEAL':
             cell = '10'
         case _:
-            await ctx.send('>>> Please enter a valid character name!')
+            embed.title = "**Error** ⚠️"
+            embed.description = f"Received {char_name}, which is not a valid character name. Please try again."
+            embed.color = discord.Color.red()
+            await ctx.send(embed=embed)
             return
 
     sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
@@ -147,7 +152,10 @@ async def add(
         cell = 'C' + cell
         embed.title = f'1 added {random.choice(sad_emoji)}'
     else:
-        await ctx.send('>>> Please enter a valid crit type!')
+        embed.title = "**Error** ⚠️"
+        embed.description = f"Received {crit_type}, which is not a valid crit type. Please try again."
+        embed.color = discord.Color.red()
+        await ctx.send(embed=embed)
         return
 
     num_crits = get_and_update(cell)
