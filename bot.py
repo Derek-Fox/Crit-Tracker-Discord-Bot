@@ -1,5 +1,4 @@
 """Discord bot to allow access to spreadsheet containing crits directly from the server"""
-"""Testing webhook for github"""
 from __future__ import print_function
 
 import os
@@ -167,3 +166,4 @@ async def add(
     await ctx.send(embed=embed)
 
 bot.run(TOKEN)
+#Testing webhooks again
