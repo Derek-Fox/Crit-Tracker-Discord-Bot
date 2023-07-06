@@ -108,7 +108,7 @@ async def on_ready():
 async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
     """Increments the session number by 1"""
     valid = ['Paxorian', 'Kriggsan']
-    if campaign not in valid:
+    if campaign.title() not in valid:
         embed = discord.Embed()
         embed.title = '**Error** ⚠️'
         embed.description = f'Received {campaign}, which is not a valid campaign name. Please try again.'
@@ -132,7 +132,7 @@ async def add(
     cell = ''
     sheet = ''
     embed = discord.Embed()
-    paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND',]
+    paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND']
     kriggsan_chars = ['CHARACTER'] #TODO: Add Kriggsan characters
     if char_name.upper() in paxorian_chars:
         sheet = PAXORIAN_SHEETNAME
@@ -157,7 +157,7 @@ async def add(
         match char_name.upper():
             case 'CHARACTER':
                 cell = '2'
-                embed.color = 0x000000 
+                embed.color = 0x000000
                 #TODO: Add Kriggsan characters
     else:
         embed.title = '**Error** ⚠️'
@@ -173,7 +173,7 @@ async def add(
         embed.title = f'20 added! {random.choice(happy_emoji)}'
     elif crit_type == '1':
         cell = 'C' + cell
-        embed.title = f'1 added {random.choice(sad_emoji)}'
+        embed.title = f'1 added. {random.choice(sad_emoji)}'
     else:
         embed.title = '**Error** ⚠️'
         embed.description = f'Received {crit_type}, which is not a valid crit type. Please try again.'
