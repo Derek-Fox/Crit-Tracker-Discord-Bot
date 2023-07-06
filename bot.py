@@ -104,14 +104,22 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=game)
 
 
-# @bot.command(name='session', help='Increments the session number by one.')
-# async def session(ctx):
-#     """Increments the session number by 1"""
-#     new_session_number = get_and_update('H2')
-#     await ctx.send(
-#         embed=discord.Embed(title=f'Session number is now {new_session_number}',
-#         color=0xA2C4C9)
-#         )
+@bot.command(name='session', help='Increments the session number by one.')
+async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
+    """Increments the session number by 1"""
+    valid = ['Paxorian', 'Kriggsan']
+    if campaign not in valid:
+        embed = discord.Embed()
+        embed.title = '**Error** ⚠️'
+        embed.description = f'Received {campaign}, which is not a valid campaign name. Please try again.'
+        embed.color = discord.Color.red()
+        await ctx.send(embed=embed)
+        return
+    new_session_number = get_and_update('H2', campaign.title())
+    await ctx.send(
+        embed=discord.Embed(title=f'Session number is now {new_session_number}',
+        color=0xA2C4C9)
+        )
 
 
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
