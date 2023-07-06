@@ -18,6 +18,8 @@ from googleapiclient.errors import HttpError
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 SHEET_ID = os.getenv('SHEET_ID')
+PAXORIAN_SHEETNAME=os.getenv('PAXORIAN_SHEETNAME')
+KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME')
 
 INTENTS = discord.Intents(messages=True, guilds=True)
 INTENTS.message_content = True
@@ -47,8 +49,9 @@ if not CREDS or not CREDS.valid:
         token.write(CREDS.to_json())
 
 
-def update_values(spreadsheet_id, range_name, value_input_option, _values):
+def update_values(spreadsheet_id, subsheet_id, range_name, value_input_option, _values):
     """Updates values on the spreadsheet in the given range with given values"""
+    range_name = f'{subsheet_id}!{range_name}'
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         body = {'values': _values}
@@ -65,8 +68,9 @@ def update_values(spreadsheet_id, range_name, value_input_option, _values):
         return error
 
 
-def get_values(spreadsheet_id, range_name):
+def get_values(spreadsheet_id, subsheet_id, range_name):
     """Returns values from the spreadsheet from the specified range"""
+    range_name = f'{subsheet_id}!{range_name}'
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         result = service.spreadsheets().values().get(
@@ -81,11 +85,11 @@ def get_values(spreadsheet_id, range_name):
         return error
 
 
-def get_and_update(cell):
+def get_and_update(cell, subsheet_id):
     """Increments the value of the given cell by 1."""
-    value = get_values(SHEET_ID, cell).get('values', [])
+    value = get_values(SHEET_ID, subsheet_id, cell).get('values', [])
 
-    update_values(SHEET_ID, cell, 'USER_ENTERED',
+    update_values(SHEET_ID, subsheet_id, cell, 'USER_ENTERED',
                   [[int(value[0][0]) + 1]])
 
     print(f'{cell} updated!')
@@ -100,14 +104,14 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=game)
 
 
-@bot.command(name='session', help='Increments the session number by one.')
-async def session(ctx):
-    """Increments the session number by 1"""
-    new_session_number = get_and_update('H2')
-    await ctx.send(
-        embed=discord.Embed(title=f'Session number is now {new_session_number}',
-        color=0xA2C4C9)
-        )
+# @bot.command(name='session', help='Increments the session number by one.')
+# async def session(ctx):
+#     """Increments the session number by 1"""
+#     new_session_number = get_and_update('H2')
+#     await ctx.send(
+#         embed=discord.Embed(title=f'Session number is now {new_session_number}',
+#         color=0xA2C4C9)
+#         )
 
 
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
@@ -118,33 +122,41 @@ async def add(
 ):
     """Adds a crit of the specified type to the specified character."""
     cell = ''
+    sheet = ''
     embed = discord.Embed()
-    match char_name.upper():
-        case 'ZOHAR':
-            cell = '2'
-            embed.color = 0x8E7CC3
-        case 'MORBO':
-            cell = '3'
-            embed.color = 0x38761D
-        case 'GRUNT':
-            cell = '4'
-            embed.color = 0x000000
-        case 'CELEMINE':
-            cell = '5'
-            embed.color = 0x351C75
-        case 'ORWYND':
-            cell = '6'
-            embed.color = 0xEB7AB1
-        case 'BORMOD':
-            cell = '9'
-        case 'OATMEAL':
-            cell = '10'
-        case _:
-            embed.title = '**Error** ⚠️'
-            embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
-            embed.color = discord.Color.red()
-            await ctx.send(embed=embed)
-            return
+    paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND',]
+    kriggsan_chars = ['CHARACTER'] #TODO: Add Kriggsan characters
+    if char_name.upper() in paxorian_chars:
+        sheet = PAXORIAN_SHEETNAME
+        match char_name.upper():
+            case 'ZOHAR':
+                cell = '2'
+                embed.color = 0x8E7CC3
+            case 'MORBO':
+                cell = '3'
+                embed.color = 0x38761D
+            case 'GRUNT':
+                cell = '4'
+                embed.color = 0x000000
+            case 'CELEMINE':
+                cell = '5'
+                embed.color = 0x351C75
+            case 'ORWYND':
+                cell = '6'
+                embed.color = 0xEB7AB1
+    elif char_name.upper() in kriggsan_chars:
+        sheet = KRIGGSAN_SHEETNAME
+        match char_name.upper():
+            case 'CHARACTER':
+                cell = '2'
+                embed.color = 0x000000 
+                #TODO: Add Kriggsan characters
+    else:
+        embed.title = '**Error** ⚠️'
+        embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
+        embed.color = discord.Color.red()
+        await ctx.send(embed=embed)
+        return
 
     sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
     happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
@@ -161,8 +173,8 @@ async def add(
         await ctx.send(embed=embed)
         return
 
-    num_crits = get_and_update(cell)
-    embed.description = f'{char_name} now has {num2words(num_crits)} {crit_type}s!'
+    num_crits = get_and_update(cell, sheet)
+    embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
 
     await ctx.send(embed=embed)
 
