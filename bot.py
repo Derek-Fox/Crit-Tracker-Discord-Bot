@@ -55,12 +55,13 @@ def update_values(spreadsheet_id, subsheet_id, range_name, value_input_option, _
     try:
         service = build('sheets', 'v4', credentials=CREDS)
         body = {'values': _values}
+        # pylint: disable=maybe-no-member
         result = service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
             range=range_name,
             valueInputOption=value_input_option,
             body=body
-        ).execute()
+        ).execute() 
         print(f'{result.get("updatedCells")} cells updated.')
         return result
     except HttpError as error:
@@ -73,6 +74,7 @@ def get_values(spreadsheet_id, subsheet_id, range_name):
     range_name = f'{subsheet_id}!{range_name}'
     try:
         service = build('sheets', 'v4', credentials=CREDS)
+        # pylint: disable=maybe-no-member
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
             range=range_name
@@ -138,7 +140,7 @@ async def add(
     
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
-    paxorian_chars_colors = [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1] #cooresponding colors for paxorian_chars
+    paxorian_chars_colors = [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1] #corresponding colors for paxorian_chars
     kriggsan_chars = ['CHARACTER'] #TODO: Add Kriggsan characters
     kriggsan_chars_colors = [0xffffff] #TODO: Add Kriggsan colors
     
