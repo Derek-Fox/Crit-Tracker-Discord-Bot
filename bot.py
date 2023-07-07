@@ -18,8 +18,8 @@ from googleapiclient.errors import HttpError
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 SHEET_ID = os.getenv('SHEET_ID')
-PAXORIAN_SHEETNAME=os.getenv('PAXORIAN_SHEETNAME')
-KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME')
+PAXORIAN_SHEETNAME=os.getenv('PAXORIAN_SHEETNAME') # not sure how important it is to have these as env vars
+KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
 
 INTENTS = discord.Intents(messages=True, guilds=True)
 INTENTS.message_content = True
@@ -129,36 +129,28 @@ async def add(
     char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
 ):
     """Adds a crit of the specified type to the specified character."""
+    
     cell = ''
     sheet = ''
     embed = discord.Embed()
-    paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND']
+    sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
+    happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
+    
+    char_name_upper = char_name.upper()
+    paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
+    paxorian_chars_colors = [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1] #cooresponding colors for paxorian_chars
     kriggsan_chars = ['CHARACTER'] #TODO: Add Kriggsan characters
-    if char_name.upper() in paxorian_chars:
+    kriggsan_chars_colors = [0xffffff] #TODO: Add Kriggsan colors
+    
+    #get the sheet and row for the character
+    if char_name_upper in paxorian_chars:
         sheet = PAXORIAN_SHEETNAME
-        match char_name.upper():
-            case 'ZOHAR':
-                cell = '2'
-                embed.color = 0x8E7CC3
-            case 'MORBO':
-                cell = '3'
-                embed.color = 0x38761D
-            case 'GRUNT':
-                cell = '4'
-                embed.color = 0x000000
-            case 'CELEMINE':
-                cell = '5'
-                embed.color = 0x351C75
-            case 'ORWYND':
-                cell = '6'
-                embed.color = 0xEB7AB1
-    elif char_name.upper() in kriggsan_chars:
+        cell = paxorian_chars.index(char_name_upper) + 2
+        embed.color = paxorian_chars_colors[cell - 2]
+    elif char_name_upper in kriggsan_chars:
         sheet = KRIGGSAN_SHEETNAME
-        match char_name.upper():
-            case 'CHARACTER':
-                cell = '2'
-                embed.color = 0x000000
-                #TODO: Add Kriggsan characters
+        cell = kriggsan_chars.index(char_name_upper) + 2
+        embed.color = kriggsan_chars_colors[cell - 2]
     else:
         embed.title = '**Error** ⚠️'
         embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
@@ -166,13 +158,12 @@ async def add(
         await ctx.send(embed=embed)
         return
 
-    sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
-    happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
+    #get the column for the crit type
     if crit_type == '20':
-        cell = 'B' + cell
+        cell = 'B' + str(cell)
         embed.title = f'20 added! {random.choice(happy_emoji)}'
     elif crit_type == '1':
-        cell = 'C' + cell
+        cell = 'C' + str(cell)
         embed.title = f'1 added. {random.choice(sad_emoji)}'
     else:
         embed.title = '**Error** ⚠️'
@@ -181,9 +172,11 @@ async def add(
         await ctx.send(embed=embed)
         return
 
+    #send crit to sheet and update embed with new number of crits
     num_crits = get_and_update(cell, sheet)
     embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
 
+    #send embed to discord
     await ctx.send(embed=embed)
 
 bot.run(TOKEN)
