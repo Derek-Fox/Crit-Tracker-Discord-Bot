@@ -137,6 +137,8 @@ async def add(
     embed = discord.Embed()
     sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
     happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
+    nat20img = discord.File('nat20.png')
+    nat1img = discord.File('nat1.png')
     
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
@@ -164,9 +166,11 @@ async def add(
     if crit_type == '20':
         cell = 'B' + str(cell)
         embed.title = f'20 added! {random.choice(happy_emoji)}'
+        embed.set_thumbnail(url='attachment://nat20.png')
     elif crit_type == '1':
         cell = 'C' + str(cell)
         embed.title = f'1 added. {random.choice(sad_emoji)}'
+        embed.set_thumbnail(url='attachment://nat1.png')
     else:
         embed.title = '**Error** ⚠️'
         embed.description = f'Received {crit_type}, which is not a valid crit type. Please try again.'
@@ -179,6 +183,8 @@ async def add(
     embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
 
     #send embed to discord
-    await ctx.send(embed=embed)
+    await ctx.send(
+        file = nat20img if crit_type == '20' else nat1img,
+        embed=embed)
 
 bot.run(TOKEN)
