@@ -110,18 +110,21 @@ async def on_ready():
 async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
     """Increments the session number by 1"""
     valid = ['Paxorian', 'Kriggsan']
+    warningimg = discord.File('warning.png')
+    
     if campaign.title() not in valid:
         embed = discord.Embed()
-        embed.title = '**Error** ⚠️'
+        embed.title = '**Error**'
         embed.description = f'Received {campaign}, which is not a valid campaign name. Please try again.'
+        embed.set_thumbnail(url='attachment://warning.png')
         embed.color = discord.Color.red()
-        await ctx.send(embed=embed)
+        await ctx.send(file=warningimg, embed=embed)
         return
     new_session_number = get_and_update('H2', campaign.title())
     await ctx.send(
         embed=discord.Embed(title=f'Session number is now {new_session_number}',
         color=0xA2C4C9)
-        )
+    )
 
 
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
@@ -139,6 +142,8 @@ async def add(
     happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
     nat20img = discord.File('nat20.png')
     nat1img = discord.File('nat1.png')
+    warningimg = discord.File('warning.png')
+    file = ''
     
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
@@ -156,26 +161,30 @@ async def add(
         cell = kriggsan_chars.index(char_name_upper) + 2
         embed.color = kriggsan_chars_colors[cell - 2]
     else:
-        embed.title = '**Error** ⚠️'
+        embed.title = '**Error**'
         embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
+        embed.set_thumbnail(url='attachment://warning.png')
         embed.color = discord.Color.red()
-        await ctx.send(embed=embed)
+        await ctx.send(file=warningimg, embed=embed)
         return
 
     #get the column for the crit type
     if crit_type == '20':
         cell = 'B' + str(cell)
         embed.title = f'20 added! {random.choice(happy_emoji)}'
+        file = nat20img
         embed.set_thumbnail(url='attachment://nat20.png')
     elif crit_type == '1':
         cell = 'C' + str(cell)
         embed.title = f'1 added. {random.choice(sad_emoji)}'
+        file = nat1img
         embed.set_thumbnail(url='attachment://nat1.png')
     else:
-        embed.title = '**Error** ⚠️'
+        embed.title = '**Error**'
         embed.description = f'Received {crit_type}, which is not a valid crit type. Please try again.'
+        embed.set_thumbnail(url='attachment://warning.png')
         embed.color = discord.Color.red()
-        await ctx.send(embed=embed)
+        await ctx.send(file=warningimg, embed=embed)
         return
 
     #send crit to sheet and update embed with new number of crits
@@ -183,8 +192,6 @@ async def add(
     embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
 
     #send embed to discord
-    await ctx.send(
-        file = nat20img if crit_type == '20' else nat1img,
-        embed=embed)
+    await ctx.send(file=file, embed=embed)
 
 bot.run(TOKEN)
