@@ -148,8 +148,8 @@ async def add(
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
     paxorian_chars_colors = [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1] #corresponding colors for paxorian_chars
-    kriggsan_chars = ['CHARACTER'] #TODO: Add Kriggsan characters
-    kriggsan_chars_colors = [0xffffff] #TODO: Add Kriggsan colors
+    kriggsan_chars = ['CIRRUS', 'DAELAN', 'JEREMIAH', 'LORELAI', 'TORYMYTH']
+    kriggsan_chars_colors = [0xd8e5f4,0xcc0000,0xff00ff,0x09438b,0x351c75]
     
     #get the sheet and row for the character
     if char_name_upper in paxorian_chars:
