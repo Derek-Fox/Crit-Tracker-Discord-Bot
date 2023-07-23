@@ -21,7 +21,7 @@ SHEET_ID = os.getenv('SHEET_ID')
 PAXORIAN_SHEETNAME=os.getenv('PAXORIAN_SHEETNAME') # not sure how important it is to have these as env vars
 KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
 
-INTENTS = discord.Intents(messages=True, guilds=True)
+INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
 bot = commands.Bot(
@@ -193,5 +193,14 @@ async def add(
 
     #send embed to discord
     await ctx.send(file=file, embed=embed)
+    
+@bot.command(name='join', help='Ask bot to join the voice channel you are currently in.')
+async def join(ctx):
+    channel = ctx.message.author.voice.channel
+    await channel.connect()
+
+@bot.command(name='leave', help='Ask bot to leave the voice channel.')
+async def leave(ctx):
+    await ctx.guild.voice_client.disconnect()
 
 bot.run(TOKEN)
