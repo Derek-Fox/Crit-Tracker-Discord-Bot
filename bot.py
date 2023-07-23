@@ -196,11 +196,29 @@ async def add(
     
 @bot.command(name='join', help='Ask bot to join the voice channel you are currently in.')
 async def join(ctx):
-    channel = ctx.message.author.voice.channel
-    await channel.connect()
+    if ctx.message.author.voice:
+        channel = ctx.message.author.voice.channel
+        await channel.connect()
+    else:
+        embed = discord.Embed()
+        warningimg = discord.File('warning.png')
+        embed.title = '**Error**'
+        embed.description = "You are not in a voice channel. Please join one and try again."
+        embed.set_thumbnail(url='attachment://warning.png')
+        embed.color = discord.Color.red()
+        await ctx.send(file=warningimg, embed=embed)
 
 @bot.command(name='leave', help='Ask bot to leave the voice channel.')
 async def leave(ctx):
-    await ctx.guild.voice_client.disconnect()
+    if ctx.voice_client:
+        await ctx.guild.voice_client.disconnect()
+    else:
+        embed = discord.Embed()
+        warningimg = discord.File('warning.png')
+        embed.title = '**Error**'
+        embed.description = "I am not in a voice channel."
+        embed.set_thumbnail(url='attachment://warning.png')
+        embed.color = discord.Color.red()
+        await ctx.send(file=warningimg, embed=embed)
 
 bot.run(TOKEN)
