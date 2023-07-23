@@ -24,6 +24,10 @@ KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
+nat20img = discord.File('nat20.png')
+nat1img = discord.File('nat1.png')
+warningimg = discord.File('warning.png')
+
 bot = commands.Bot(
     command_prefix='$',
     intents=INTENTS,
@@ -140,10 +144,8 @@ async def add(
     embed = discord.Embed()
     sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
     happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
-    nat20img = discord.File('nat20.png')
-    nat1img = discord.File('nat1.png')
-    warningimg = discord.File('warning.png')
     file = ''
+    sound = ''
     
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
@@ -194,27 +196,46 @@ async def add(
     #send embed to discord
     await ctx.send(file=file, embed=embed)
     
-@bot.command(name='join', help='Ask bot to join the voice channel you are currently in.')
+    #play sound if sounds are enabled
+    if ctx.voice_client:
+        play(ctx, sound) #TODO: add sound files and set sound to the corresponding one for the crit type
+    
+@bot.command(name='sounds', help='Enable sounds for crits for the current channel.')
+async def sounds(
+    ctx,
+    status: str = commands.parameter(description='on or off')
+):
+    embed = discord.Embed()
+    embed.title = f'Sounds {status}!'
+    embed.color = discord.Color.green() if status == 'on' else discord.Color.red()
+    await ctx.send(embed=embed)
+    
+    if status == 'on':
+        await join(ctx)
+    elif status == 'off':
+        await leave(ctx)
+    
+async def play(ctx, file):
+    #TODO: add ffmpeg and sounds to play for each crit type
+    await ctx.send("uh oh")
+    
 async def join(ctx):
     if ctx.message.author.voice:
         channel = ctx.message.author.voice.channel
         await channel.connect()
     else:
         embed = discord.Embed()
-        warningimg = discord.File('warning.png')
         embed.title = '**Error**'
         embed.description = "You are not in a voice channel. Please join one and try again."
         embed.set_thumbnail(url='attachment://warning.png')
         embed.color = discord.Color.red()
         await ctx.send(file=warningimg, embed=embed)
 
-@bot.command(name='leave', help='Ask bot to leave the voice channel.')
 async def leave(ctx):
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
         embed = discord.Embed()
-        warningimg = discord.File('warning.png')
         embed.title = '**Error**'
         embed.description = "I am not in a voice channel."
         embed.set_thumbnail(url='attachment://warning.png')
