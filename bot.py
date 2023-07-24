@@ -8,6 +8,7 @@ from num2words import num2words
 
 import discord
 from discord.ext import commands
+from discord import FFmpegPCMAudio
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -27,6 +28,10 @@ INTENTS.message_content = True
 nat20img = discord.File('res/nat20.png')
 nat1img = discord.File('res/nat1.png')
 warningimg = discord.File('res/warning.png')
+successsound = discord.File('res/success.wav')
+failsound = discord.File('res/fail.mp3')
+
+voice = None
 
 bot = commands.Bot(
     command_prefix='$',
@@ -214,14 +219,15 @@ async def sounds(
     elif status == 'off':
         await leave(ctx)
     
-async def play(ctx, file):
+def play(ctx, file):
     #TODO: add ffmpeg and sounds to play for each crit type
-    await ctx.send("uh oh")
+    source = FFmpegPCMAudio('res/success.wav')
+    voice.play(source)
     
 async def join(ctx):
     if ctx.message.author.voice:
         channel = ctx.message.author.voice.channel
-        await channel.connect()
+        voice = await channel.connect()
     else:
         embed = discord.Embed()
         embed.title = '**Error**'
