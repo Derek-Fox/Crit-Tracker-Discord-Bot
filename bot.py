@@ -25,14 +25,6 @@ KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
-nat20img = discord.File('res/nat20.png')
-nat1img = discord.File('res/nat1.png')
-warningimg = discord.File('res/warning.png')
-successsound = discord.File('res/success.wav')
-failsound = discord.File('res/fail.mp3')
-
-voice = None
-
 bot = commands.Bot(
     command_prefix='$',
     intents=INTENTS,
@@ -119,6 +111,7 @@ async def on_ready():
 async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
     """Increments the session number by 1"""
     valid = ['Paxorian', 'Kriggsan']
+    warningimg = discord.File('res/warning.png')
     
     if campaign.title() not in valid:
         embed = discord.Embed()
@@ -150,6 +143,9 @@ async def add(
     happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
     file = ''
     sound = ''
+    warningimg = discord.File('res/warning.png')
+    nat20img = discord.File('res/nat20.png')
+    nat1img = discord.File('res/nat1.png')
     
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
@@ -166,6 +162,10 @@ async def add(
         sheet = KRIGGSAN_SHEETNAME
         cell = kriggsan_chars.index(char_name_upper) + 2
         embed.color = kriggsan_chars_colors[cell - 2]
+    elif char_name_upper == 'TEST':
+        sheet = PAXORIAN_SHEETNAME
+        cell = 50
+        embed.color = 0xffffff
     else:
         embed.title = '**Error**'
         embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
@@ -180,11 +180,13 @@ async def add(
         embed.title = f'20 added! {random.choice(happy_emoji)}'
         file = nat20img
         embed.set_thumbnail(url='attachment://nat20.png')
+        sound = 'res/success.wav'
     elif crit_type == '1':
         cell = 'C' + str(cell)
         embed.title = f'1 added. {random.choice(sad_emoji)}'
         file = nat1img
         embed.set_thumbnail(url='attachment://nat1.png')
+        sound = 'res/fail.mp3'
     else:
         embed.title = '**Error**'
         embed.description = f'Received {crit_type}, which is not a valid crit type. Please try again.'
@@ -221,13 +223,16 @@ async def sounds(
     
 def play(ctx, file):
     #TODO: add ffmpeg and sounds to play for each crit type
-    source = FFmpegPCMAudio('res/success.wav')
+    voice = ctx.guild.voice_client
+    source = FFmpegPCMAudio(file)
     voice.play(source)
     
 async def join(ctx):
+    warningimg = discord.File('res/warning.png')
+    
     if ctx.message.author.voice:
         channel = ctx.message.author.voice.channel
-        voice = await channel.connect()
+        await channel.connect()
     else:
         embed = discord.Embed()
         embed.title = '**Error**'
@@ -237,6 +242,8 @@ async def join(ctx):
         await ctx.send(file=warningimg, embed=embed)
 
 async def leave(ctx):
+    warningimg = discord.File('res/warning.png')
+    
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
