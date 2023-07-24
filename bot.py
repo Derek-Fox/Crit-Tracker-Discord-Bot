@@ -24,9 +24,9 @@ KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
-nat20img = discord.File('nat20.png')
-nat1img = discord.File('nat1.png')
-warningimg = discord.File('warning.png')
+nat20img = discord.File('res/nat20.png')
+nat1img = discord.File('res/nat1.png')
+warningimg = discord.File('res/warning.png')
 
 bot = commands.Bot(
     command_prefix='$',
@@ -114,7 +114,6 @@ async def on_ready():
 async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
     """Increments the session number by 1"""
     valid = ['Paxorian', 'Kriggsan']
-    warningimg = discord.File('warning.png')
     
     if campaign.title() not in valid:
         embed = discord.Embed()
