@@ -204,7 +204,7 @@ async def add(
     
     #play sound if sounds are enabled
     if ctx.voice_client:
-        play(ctx, sound) #TODO: add sound files and set sound to the corresponding one for the crit type
+        play(ctx, sound)
     
 @bot.command(name='sounds', help='Enable sounds for crits for the current channel.')
 async def sounds(
@@ -222,7 +222,6 @@ async def sounds(
         await leave(ctx)
     
 def play(ctx, file):
-    #TODO: add ffmpeg and sounds to play for each crit type
     voice = ctx.guild.voice_client
     source = FFmpegPCMAudio(file)
     voice.play(source)
