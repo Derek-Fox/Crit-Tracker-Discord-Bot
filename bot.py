@@ -95,7 +95,7 @@ def get_and_update(cell, subsheet_id):
     update_values(SHEET_ID, subsheet_id, cell, 'USER_ENTERED',
                   [[int(value[0][0]) + 1]])
 
-    print(f'{cell} updated!')
+    print(f'{subsheet_id}:{cell} updated!')
 
     return int(value[0][0]) + 1
 
@@ -150,7 +150,7 @@ async def add(
     char_name_upper = char_name.upper()
     paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
     paxorian_chars_colors = [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1] #corresponding colors for paxorian_chars
-    kriggsan_chars = ['CIRRUS', 'DAELAN', 'JEREMIAH', 'LORELAI', 'TORMYTH']
+    kriggsan_chars = ['CIRRUS', 'DAELAN', 'JERIMIAH', 'LORELAI', 'TORMYTH']
     kriggsan_chars_colors = [0xd8e5f4,0xcc0000,0xff00ff,0x09438b,0x351c75]
     
     #get the sheet and row for the character
