@@ -23,6 +23,20 @@ SHEET_ID = os.getenv('SHEET_ID')
 PAXORIAN_SHEETNAME=os.getenv('PAXORIAN_SHEETNAME') # not sure how important it is to have these as env vars
 KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
 
+if not TOKEN:
+    print('No token found. Exiting...')
+    exit(1)
+if not SHEET_ID:
+    print('No SHEET_ID found. Exiting...')
+    exit(1)
+if not PAXORIAN_SHEETNAME:
+    print('No PAXORIAN_SHEETNAME found. Exiting...')
+    exit(1)
+if not KRIGGSAN_SHEETNAME:
+    print('No KRIGGSAN_SHEETNAME found. Exiting...')
+    exit(1)
+
+
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
@@ -107,111 +121,114 @@ async def on_ready():
     game = discord.Game('$help')
     await bot.change_presence(status=discord.Status.dnd, activity=game)
 
-
 @bot.command(name='session', help='Increments the session number by one.')
 async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
     """Increments the session number by 1"""
-    valid = ['Paxorian', 'Kriggsan']
-    warningimg = discord.File('res/warning.png')
-    
-    if campaign.title() not in valid:
-        embed = discord.Embed()
-        embed.title = '**Error**'
-        embed.description = f'Received {campaign}, which is not a valid campaign name. Please try again.'
-        embed.set_thumbnail(url='attachment://warning.png')
-        embed.color = discord.Color.red()
-        await ctx.send(file=warningimg, embed=embed)
+    campaign_title = campaign.title()
+    if campaign_title not in ['Paxorian', 'Kriggsan']:
+        await send_error(ctx, f'Received {campaign}, which is not a valid campaign name. Please try again.')
         return
-    new_session_number = get_and_update('H2', campaign.title())
-    await ctx.send(
-        embed=discord.Embed(title=f'Session number is now {new_session_number}',
-        color=0xA2C4C9)
-    )
+    new_session_number = get_and_update('H2', campaign_title)
+    await ctx.send(embed=discord.Embed(title=f'Session number is now {new_session_number}', color=0xA2C4C9))
 
 
-@bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
-async def add(
-    ctx,
-    crit_type: str = commands.parameter(description='Type of crit, 1 or 20'),
-    char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
-):
-    """Adds a crit of the specified type to the specified character."""
-    
-    cell = ''
-    sheet = ''
-    embed = discord.Embed()
-    sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
-    happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
-    file = ''
-    sound = ''
-    warningimg = discord.File('res/warning.png')
-    nat20img = discord.File('res/nat20.png')
-    nat1img = discord.File('res/nat1.png')
-    
-    char_name_upper = char_name.upper()
-    paxorian_chars = ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'] #characters listed in order of appearance on the sheet
-    paxorian_chars_colors = [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1] #corresponding colors for paxorian_chars
-    kriggsan_chars = ['CIRRUS', 'DAELAN', 'LAVENDER', 'LORELAI', 'TORMYTH']
-    kriggsan_chars_colors = [0xd8e5f4,0xcc0000,0xff00ff,0x09438b,0x351c75]
-    
-    #get the sheet and row for the character
-    if char_name_upper in paxorian_chars:
-        sheet = PAXORIAN_SHEETNAME
-        cell = paxorian_chars.index(char_name_upper) + 2
-        embed.color = paxorian_chars_colors[cell - 2]
-    elif char_name_upper in kriggsan_chars:
-        sheet = KRIGGSAN_SHEETNAME
-        cell = kriggsan_chars.index(char_name_upper) + 2
-        embed.color = kriggsan_chars_colors[cell - 2]
-    elif char_name_upper == 'TEST':
-        sheet = PAXORIAN_SHEETNAME
-        cell = 50
-        embed.color = 0xffffff
-    else:
-        embed.title = '**Error**'
-        embed.description = f'Received {char_name}, which is not a valid character name. Please try again.'
-        embed.set_thumbnail(url='attachment://warning.png')
-        embed.color = discord.Color.red()
-        await ctx.send(file=warningimg, embed=embed)
-        return
+CHARACTER_MAP = {
+    'PAXORIAN': {
+        'names': ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'],
+        'colors': [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1],
+        'sheet': PAXORIAN_SHEETNAME
+    },
+    'KRIGGSAN': {
+        'names': ['CIRRUS', 'DAELAN', 'LAVENDER', 'LORELAI', 'TORMYTH'],
+        'colors': [0xd8e5f4,0xcc0000,0xff00ff,0x09438b,0x351c75],
+        'sheet': KRIGGSAN_SHEETNAME
+    },
+    'TEST': {
+        'names': ['TEST'],
+        'colors': [0x000000],
+        'sheet': PAXORIAN_SHEETNAME,
+        'row': 50
+    }
+}
 
-    #get the column for the crit type
-    if crit_type == '20':
-        cell = 'B' + str(cell)
-        embed.title = f'20 added! {random.choice(happy_emoji)}'
-        file = nat20img
-        embed.set_thumbnail(url='attachment://nat20.png')
-        sound = 'res/success.wav'
-    elif crit_type == '1':
-        cell = 'C' + str(cell)
-        embed.title = f'1 added. {random.choice(sad_emoji)}'
-        file = nat1img
-        embed.set_thumbnail(url='attachment://nat1.png')
-        sound = 'res/fail.mp3'
-    else:
-        embed.title = '**Error**'
-        embed.description = f'Received {crit_type}, which is not a valid crit type. Please try again.'
-        embed.set_thumbnail(url='attachment://warning.png')
-        embed.color = discord.Color.red()
-        await ctx.send(file=warningimg, embed=embed)
-        return
+CRIT_TYPE_MAP = {
+    '20': {
+        'cell': 'B',
+        'title': '20 added! {emoji}',
+        'img': discord.File('res/nat20.png'),
+        'sound': 'res/success.wav'
+    },
+    '1': {
+        'cell': 'C',
+        'title': '1 added. {emoji}',
+        'img': discord.File('res/nat1.png'),
+        'sound': 'res/fail.mp3'
+    }
+}
 
-    #send crit to sheet and update embed with new number of crits
-    num_crits = get_and_update(cell, sheet)
+happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
+sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
+
+def get_character_info(char_name_upper: str) -> tuple:
+    for _, info in CHARACTER_MAP.items():
+        if char_name_upper in info['names']:
+            index = info['names'].index(char_name_upper)
+            return info['sheet'], info.get('row', index + 2), info['colors'][index]
+    return None, None, None
+
+def get_crit_type_info(crit_type: str) -> tuple:
+    if crit_type not in CRIT_TYPE_MAP:
+        return None, None
+    crit_info = CRIT_TYPE_MAP[crit_type]
+    return crit_info['cell'], crit_info
+
+async def send_error(ctx, message):
+    embed = discord.Embed(title='**Error**', description=message, color=discord.Color.red())
+    embed.set_thumbnail(url='attachment://warning.png')
+    await ctx.send(file=discord.File('res/warning.png'), embed=embed)
+
+def build_embed(crit_info, crit_type, char_name, num_crits, color):
+    embed = discord.Embed(title=crit_info['title'].format(emoji=random.choice(happy_emoji if crit_type == '20' else sad_emoji)), color=color)
+    embed.set_thumbnail(url='attachment://nat{}.png'.format(crit_type))
     embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
+    return embed
 
-    #send embed to discord
-    await ctx.send(file=file, embed=embed)
-    
-    #play sound if sounds are enabled
+def play(ctx, file):
+    voice = ctx.guild.voice_client
+    source = FFmpegPCMAudio(file)
+    voice.play(source)
+
+def play_sound(ctx, sound):
     if ctx.voice_client:
         play(ctx, sound)
+
+@bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
+async def add(ctx, crit_type: str = commands.parameter(description='Type of crit, 1 or 20'), char_name: str = commands.parameter(description='Name of character, e.g. Morbo')):
+    char_name_upper = char_name.upper()
+    sheet, cell_row, color = get_character_info(char_name_upper)
+    if not sheet:
+        await send_error(ctx, f'Received {char_name}, which is not a valid character name. Please try again.')
+        return
+    cell_column, crit_info = get_crit_type_info(crit_type)
+    if not cell_column or not crit_info:
+        await send_error(ctx, f'Received {crit_type}, which is not a valid crit type. Please try again.')
+        return
+    cell = cell_column + str(cell_row)
+    num_crits = get_and_update(cell, sheet)
+    embed = build_embed(crit_info, crit_type, char_name, num_crits, color)
+    await ctx.send(file=crit_info['img'], embed=embed)
+    play_sound(ctx, crit_info['sound'])    
+    
     
 @bot.command(name='sounds', help='Enable sounds for crits for the current channel.')
 async def sounds(
     ctx,
     status: str = commands.parameter(description='on or off')
 ):
+    if status not in ['on', 'off']:
+        await send_error(ctx, f'Received {status}, which is not a valid status. Please try again.')
+        return
+    
     embed = discord.Embed()
     embed.title = f'Sounds {status}!'
     embed.color = discord.Color.green() if status == 'on' else discord.Color.red()
@@ -222,36 +239,17 @@ async def sounds(
     elif status == 'off':
         await leave(ctx)
     
-def play(ctx, file):
-    voice = ctx.guild.voice_client
-    source = FFmpegPCMAudio(file)
-    voice.play(source)
-    
 async def join(ctx):
-    warningimg = discord.File('res/warning.png')
-    
     if ctx.message.author.voice:
         channel = ctx.message.author.voice.channel
         await channel.connect()
     else:
-        embed = discord.Embed()
-        embed.title = '**Error**'
-        embed.description = "You are not in a voice channel. Please join one and try again."
-        embed.set_thumbnail(url='attachment://warning.png')
-        embed.color = discord.Color.red()
-        await ctx.send(file=warningimg, embed=embed)
+        await send_error(ctx, 'You are not in a voice channel.')
 
 async def leave(ctx):
-    warningimg = discord.File('res/warning.png')
-    
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
-        embed = discord.Embed()
-        embed.title = '**Error**'
-        embed.description = "I am not in a voice channel."
-        embed.set_thumbnail(url='attachment://warning.png')
-        embed.color = discord.Color.red()
-        await ctx.send(file=warningimg, embed=embed)
+        await send_error(ctx, 'I am not in a voice channel.')
 
 bot.run(TOKEN)
