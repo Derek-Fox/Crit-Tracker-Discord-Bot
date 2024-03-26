@@ -126,42 +126,36 @@ async def session(ctx, campaign: str = commands.parameter(description='Campaign 
     """Increments the session number by 1"""
     campaign_title = campaign.title()
     if campaign_title not in ['Paxorian', 'Kriggsan']:
-        await send_error(ctx, f'Received {campaign}, which is not a valid campaign name. Please try again.')
+        await send_error_embed(ctx, f'Received {campaign}, which is not a valid campaign name. Please try again.')
         return
     new_session_number = get_and_update('H2', campaign_title)
     await ctx.send(embed=discord.Embed(title=f'Session number is now {new_session_number}', color=0xA2C4C9))
 
-
 CHARACTER_MAP = {
-    'PAXORIAN': {
-        'names': ['ZOHAR', 'MORBO', 'GRUNT', 'CELEMINE', 'ORWYND'],
-        'colors': [0x8E7CC3, 0x38761D, 0x000000, 0x351C75, 0xEB7AB1],
-        'sheet': PAXORIAN_SHEETNAME
-    },
-    'KRIGGSAN': {
-        'names': ['CIRRUS', 'DAELAN', 'LAVENDER', 'LORELAI', 'TORMYTH'],
-        'colors': [0xd8e5f4,0xcc0000,0xff00ff,0x09438b,0x351c75],
-        'sheet': KRIGGSAN_SHEETNAME
-    },
-    'TEST': {
-        'names': ['TEST'],
-        'colors': [0x000000],
-        'sheet': PAXORIAN_SHEETNAME,
-        'row': 50
-    }
+    'ZOHAR': {'color': 0x8E7CC3, 'sheet': PAXORIAN_SHEETNAME, 'row': '2'},
+    'MORBO': {'color': 0x38761D, 'sheet': PAXORIAN_SHEETNAME, 'row': '3'},
+    'GRUNT': {'color': 0x000000, 'sheet': PAXORIAN_SHEETNAME, 'row': '4'},
+    'CELEMINE': {'color': 0x351C75, 'sheet': PAXORIAN_SHEETNAME, 'row': '5'},
+    'ORWYND': {'color': 0xEB7AB1, 'sheet': PAXORIAN_SHEETNAME, 'row': '6'},
+    'CIRRUS': {'color': 0xd8e5f4, 'sheet': KRIGGSAN_SHEETNAME, 'row': '2'},
+    'DAELAN': {'color': 0xcc0000, 'sheet': KRIGGSAN_SHEETNAME, 'row': '3'},
+    'LAVENDER': {'color': 0xff00ff, 'sheet': KRIGGSAN_SHEETNAME, 'row': '4'},
+    'LORELAI': {'color': 0x09438b, 'sheet': KRIGGSAN_SHEETNAME, 'row': '5'},
+    'TORMYTH': {'color': 0x351c75, 'sheet': KRIGGSAN_SHEETNAME, 'row': '6'},
+    'TEST': {'color': 0x000000, 'sheet': PAXORIAN_SHEETNAME, 'row': '50'}
 }
 
 CRIT_TYPE_MAP = {
     '20': {
         'cell': 'B',
         'title': '20 added! {emoji}',
-        'img': discord.File('res/nat20.png'),
+        'img': 'res/nat20.png',
         'sound': 'res/success.wav'
     },
     '1': {
         'cell': 'C',
         'title': '1 added. {emoji}',
-        'img': discord.File('res/nat1.png'),
+        'img': 'res/nat1.png',
         'sound': 'res/fail.mp3'
     }
 }
@@ -169,26 +163,19 @@ CRIT_TYPE_MAP = {
 happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
 sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
 
-def get_character_info(char_name_upper: str) -> tuple:
-    for _, info in CHARACTER_MAP.items():
-        if char_name_upper in info['names']:
-            index = info['names'].index(char_name_upper)
-            return info['sheet'], info.get('row', index + 2), info['colors'][index]
-    return None, None, None
-
 def get_crit_type_info(crit_type: str) -> tuple:
     if crit_type not in CRIT_TYPE_MAP:
         return None, None
     crit_info = CRIT_TYPE_MAP[crit_type]
     return crit_info['cell'], crit_info
 
-async def send_error(ctx, message):
+async def send_error_embed(ctx, message):
     embed = discord.Embed(title='**Error**', description=message, color=discord.Color.red())
     embed.set_thumbnail(url='attachment://warning.png')
     await ctx.send(file=discord.File('res/warning.png'), embed=embed)
 
-def build_embed(crit_info, crit_type, char_name, num_crits, color):
-    embed = discord.Embed(title=crit_info['title'].format(emoji=random.choice(happy_emoji if crit_type == '20' else sad_emoji)), color=color)
+def build_embed(title, crit_type, char_name, num_crits, color):
+    embed = discord.Embed(title=title.format(emoji=random.choice(happy_emoji if crit_type == '20' else sad_emoji)), color=color)
     embed.set_thumbnail(url='attachment://nat{}.png'.format(crit_type))
     embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
     return embed
@@ -203,20 +190,23 @@ def play_sound(ctx, sound):
         play(ctx, sound)
 
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
-async def add(ctx, crit_type: str = commands.parameter(description='Type of crit, 1 or 20'), char_name: str = commands.parameter(description='Name of character, e.g. Morbo')):
-    char_name_upper = char_name.upper()
-    sheet, cell_row, color = get_character_info(char_name_upper)
-    if not sheet:
-        await send_error(ctx, f'Received {char_name}, which is not a valid character name. Please try again.')
+async def add(
+    ctx, 
+    crit_type: str = commands.parameter(description='Type of crit, 1 or 20'), 
+    char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
+):
+    char_info = CHARACTER_MAP.get(char_name.upper())
+    if not char_info:
+        await send_error_embed(ctx, f'Received {char_name}, which is not a valid character name. Please try again.')
         return
-    cell_column, crit_info = get_crit_type_info(crit_type)
-    if not cell_column or not crit_info:
-        await send_error(ctx, f'Received {crit_type}, which is not a valid crit type. Please try again.')
+    crit_info = CRIT_TYPE_MAP.get(crit_type)
+    if not crit_info:
+        await send_error_embed(ctx, f'Received {crit_type}, which is not a valid crit type. Please try again.')
         return
-    cell = cell_column + str(cell_row)
-    num_crits = get_and_update(cell, sheet)
-    embed = build_embed(crit_info, crit_type, char_name, num_crits, color)
-    await ctx.send(file=crit_info['img'], embed=embed)
+    cell = crit_info['cell'] + char_info['row']
+    num_crits = get_and_update(cell, char_info['sheet'])
+    embed = build_embed(crit_info['title'], crit_type, char_name, num_crits, char_info['color'])
+    await ctx.send(file=discord.File(crit_info['img']), embed=embed)
     play_sound(ctx, crit_info['sound'])    
     
     
@@ -226,7 +216,7 @@ async def sounds(
     status: str = commands.parameter(description='on or off')
 ):
     if status not in ['on', 'off']:
-        await send_error(ctx, f'Received {status}, which is not a valid status. Please try again.')
+        await send_error_embed(ctx, f'Received {status}, which is not a valid status. Please try again.')
         return
     
     embed = discord.Embed()
@@ -244,12 +234,12 @@ async def join(ctx):
         channel = ctx.message.author.voice.channel
         await channel.connect()
     else:
-        await send_error(ctx, 'You are not in a voice channel.')
+        await send_error_embed(ctx, 'You are not in a voice channel.')
 
 async def leave(ctx):
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
-        await send_error(ctx, 'I am not in a voice channel.')
+        await send_error_embed(ctx, 'I am not in a voice channel.')
 
 bot.run(TOKEN)
