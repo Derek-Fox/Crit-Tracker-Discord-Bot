@@ -11,6 +11,7 @@ from discord.ext import commands
 from discord import FFmpegPCMAudio
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
 import requests
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -20,8 +21,8 @@ from googleapiclient.errors import HttpError
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 SHEET_ID = os.getenv('SHEET_ID')
-PAXORIAN_SHEETNAME=os.getenv('PAXORIAN_SHEETNAME') # not sure how important it is to have these as env vars
-KRIGGSAN_SHEETNAME=os.getenv('KRIGGSAN_SHEETNAME') # ^
+PAXORIAN_SHEETNAME = os.getenv('PAXORIAN_SHEETNAME')  # not sure how important it is to have these as env vars
+KRIGGSAN_SHEETNAME = os.getenv('KRIGGSAN_SHEETNAME')  # ^
 
 if not TOKEN:
     print('No token found. Exiting...')
@@ -35,7 +36,6 @@ if not PAXORIAN_SHEETNAME:
 if not KRIGGSAN_SHEETNAME:
     print('No KRIGGSAN_SHEETNAME found. Exiting...')
     exit(1)
-
 
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
@@ -53,9 +53,10 @@ if os.path.exists('token.json'):
     CREDS = Credentials.from_authorized_user_file('token.json', SCOPES)
 # If there are no (valid) credentials available, let the user log in.
 if not CREDS or not CREDS.valid:
-    if CREDS and CREDS.expired and CREDS.refresh_token:
-        CREDS.refresh(Request())
-    else:
+    try:
+        if CREDS and CREDS.expired and CREDS.refresh_token:
+            CREDS.refresh(Request())
+    except RefreshError:
         flow = InstalledAppFlow.from_client_secrets_file(
             'credentials.json', SCOPES)
         flow.authorization_url(access_type='offline', include_granted_scopes='true')
@@ -77,7 +78,7 @@ def update_values(spreadsheet_id, subsheet_id, range_name, value_input_option, _
             range=range_name,
             valueInputOption=value_input_option,
             body=body
-        ).execute() 
+        ).execute()
         print(f'{result.get("updatedCells")} cells updated.')
         return result
     except HttpError as error:
@@ -121,6 +122,7 @@ async def on_ready():
     game = discord.Game('$help')
     await bot.change_presence(status=discord.Status.dnd, activity=game)
 
+
 @bot.command(name='session', help='Increments the session number by one.')
 async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
     """Increments the session number by 1"""
@@ -130,6 +132,7 @@ async def session(ctx, campaign: str = commands.parameter(description='Campaign 
         return
     new_session_number = get_and_update('H2', campaign_title)
     await ctx.send(embed=discord.Embed(title=f'Session number is now {new_session_number}', color=0xA2C4C9))
+
 
 CHARACTER_MAP = {
     'ZOHAR': {'color': 0x8E7CC3, 'sheet': PAXORIAN_SHEETNAME, 'row': '2'},
@@ -147,13 +150,13 @@ CHARACTER_MAP = {
 
 CRIT_TYPE_MAP = {
     '20': {
-        'cell': 'B',
+        'col': 'B',
         'title': '20 added! {emoji}',
         'img': 'res/nat20.png',
         'sound': 'res/success.wav'
     },
     '1': {
-        'cell': 'C',
+        'col': 'C',
         'title': '1 added. {emoji}',
         'img': 'res/nat1.png',
         'sound': 'res/fail.mp3'
@@ -163,37 +166,33 @@ CRIT_TYPE_MAP = {
 happy_emoji = list('😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏')
 sad_emoji = list('😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫')
 
-def get_crit_type_info(crit_type: str) -> tuple:
-    if crit_type not in CRIT_TYPE_MAP:
-        return None, None
-    crit_info = CRIT_TYPE_MAP[crit_type]
-    return crit_info['cell'], crit_info
 
 async def send_error_embed(ctx, message):
     embed = discord.Embed(title='**Error**', description=message, color=discord.Color.red())
     embed.set_thumbnail(url='attachment://warning.png')
     await ctx.send(file=discord.File('res/warning.png'), embed=embed)
 
+
 def build_embed(title, crit_type, char_name, num_crits, color):
-    embed = discord.Embed(title=title.format(emoji=random.choice(happy_emoji if crit_type == '20' else sad_emoji)), color=color)
-    embed.set_thumbnail(url='attachment://nat{}.png'.format(crit_type))
+    embed = discord.Embed(title=title.format(emoji=random.choice(happy_emoji if crit_type == '20' else sad_emoji)),
+                          color=color)
+    embed.set_thumbnail(url=f'attachment://nat{crit_type}.png')
     embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
     return embed
 
-def play(ctx, file):
-    voice = ctx.guild.voice_client
-    source = FFmpegPCMAudio(file)
-    voice.play(source)
 
 def play_sound(ctx, sound):
     if ctx.voice_client:
-        play(ctx, sound)
+        voice = ctx.guild.voice_client
+        source = FFmpegPCMAudio(sound)
+        voice.play(source)
+
 
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
 async def add(
-    ctx, 
-    crit_type: str = commands.parameter(description='Type of crit, 1 or 20'), 
-    char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
+        ctx,
+        crit_type: str = commands.parameter(description='Type of crit, 1 or 20'),
+        char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
 ):
     char_info = CHARACTER_MAP.get(char_name.upper())
     if not char_info:
@@ -203,32 +202,31 @@ async def add(
     if not crit_info:
         await send_error_embed(ctx, f'Received {crit_type}, which is not a valid crit type. Please try again.')
         return
-    cell = crit_info['cell'] + char_info['row']
+    cell = crit_info['col'] + char_info['row']
     num_crits = get_and_update(cell, char_info['sheet'])
     embed = build_embed(crit_info['title'], crit_type, char_name, num_crits, char_info['color'])
     await ctx.send(file=discord.File(crit_info['img']), embed=embed)
-    play_sound(ctx, crit_info['sound'])    
-    
-    
+    play_sound(ctx, crit_info['sound'])
+
+
 @bot.command(name='sounds', help='Enable sounds for crits for the current channel.')
 async def sounds(
-    ctx,
-    status: str = commands.parameter(description='on or off')
+        ctx,
+        status: str = commands.parameter(description='on or off')
 ):
     if status not in ['on', 'off']:
         await send_error_embed(ctx, f'Received {status}, which is not a valid status. Please try again.')
         return
-    
-    embed = discord.Embed()
-    embed.title = f'Sounds {status}!'
-    embed.color = discord.Color.green() if status == 'on' else discord.Color.red()
+
+    embed = discord.Embed(title=f'Sounds {status}!', color=discord.Color.green() if status == 'on' else discord.Color.red())
     await ctx.send(embed=embed)
-    
+
     if status == 'on':
         await join(ctx)
     elif status == 'off':
         await leave(ctx)
-    
+
+
 async def join(ctx):
     if ctx.message.author.voice:
         channel = ctx.message.author.voice.channel
@@ -236,10 +234,12 @@ async def join(ctx):
     else:
         await send_error_embed(ctx, 'You are not in a voice channel.')
 
+
 async def leave(ctx):
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
         await send_error_embed(ctx, 'I am not in a voice channel.')
+
 
 bot.run(TOKEN)
