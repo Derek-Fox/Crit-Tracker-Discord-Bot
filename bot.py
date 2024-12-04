@@ -1,24 +1,22 @@
 """Discord bot to allow access to spreadsheet containing crits directly from the server"""
 from __future__ import print_function
 
-import os
 import os.path
 import random
 import subprocess
-from num2words import num2words
 
 import discord
-from discord.ext import commands
+import google.generativeai as genai
 from discord import FFmpegPCMAudio
+from discord.ext import commands
 from dotenv import load_dotenv
-from google.auth.transport.requests import Request
 from google.auth.exceptions import RefreshError
-import requests
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import google.generativeai as genai
+from num2words import num2words
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -28,7 +26,7 @@ KRIGGSAN_SHEETNAME = os.getenv('KRIGGSAN_SHEETNAME')  # ^
 POWERSHELL_PATH = rf"{os.getenv('POWERSHELL_PATH')}"
 
 # Initialize the model
-genai.configure(api_key=os.environ['GEMINI_API_KEY'])
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 COW_MODEL = genai.GenerativeModel("gemini-1.5-flash")
 COW_CHAT = COW_MODEL.start_chat(
     history=[
