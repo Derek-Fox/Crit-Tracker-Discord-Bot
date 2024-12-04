@@ -18,6 +18,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import google.generativeai as genai
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -25,6 +26,20 @@ SHEET_ID = os.getenv('SHEET_ID')
 PAXORIAN_SHEETNAME = os.getenv('PAXORIAN_SHEETNAME')  # not sure how important it is to have these as env vars
 KRIGGSAN_SHEETNAME = os.getenv('KRIGGSAN_SHEETNAME')  # ^
 POWERSHELL_PATH = rf"{os.getenv('POWERSHELL_PATH')}"
+
+# Initialize the model
+genai.configure(api_key=os.environ['GEMINI_API_KEY'])
+COW_MODEL = genai.GenerativeModel("gemini-1.5-flash")
+COW_CHAT = COW_MODEL.start_chat(
+    history=[
+        {"role": "user", "parts": f"""
+        Your name is Tim.
+        You are a talking cow, who is strangely haunted by his own sentience.
+        You are quite intelligent, but you are also a cow and you are not sure how to feel about that. 
+        Please respond to the message you receive in one or two sentences.
+        """}
+    ]
+)
 
 if not TOKEN:
     print('No token found. Exiting...')
@@ -220,7 +235,8 @@ async def sounds(
         await send_error_embed(ctx, f'Received {status}, which is not a valid status. Please try again.')
         return
 
-    embed = discord.Embed(title=f'Sounds {status}!', color=discord.Color.green() if status == 'on' else discord.Color.red())
+    embed = discord.Embed(title=f'Sounds {status}!',
+                          color=discord.Color.green() if status == 'on' else discord.Color.red())
     await ctx.send(embed=embed)
 
     if status == 'on':
@@ -228,15 +244,16 @@ async def sounds(
     elif status == 'off':
         await leave(ctx)
 
+
 @bot.command(name='cowsay', help='Get a cow to say something for you.')
 async def cowsay(
         ctx,
-        message: str = commands.parameter(description='what the cow says')
+        *, message: str = commands.parameter(description='what the cow says', default=None)
 ):
     if not message:
-        message = '*The cow stares back at you blankly*'
+        message = '* The cow stares at you blankly *'
 
-    command = f"cowsay '{message}'"
+    command = f'cowsay "{message}"'
     result = subprocess.run(
         [POWERSHELL_PATH, "-Command", command],
         capture_output=True,
@@ -244,8 +261,21 @@ async def cowsay(
         check=True
     )
 
-    await ctx.send(result.stdout)
+    await ctx.send(f"```{result.stdout}```")
 
+
+@bot.command(name='cowchat', help='have a conversation with a cow')
+async def cowchat(
+        ctx,
+        *, message: str = commands.parameter(description='what you say to the cow',
+                                             default=None)
+):
+    if not message:
+        await cowsay(ctx, message=None)
+        return
+
+    response = COW_CHAT.send_message(message)
+    await cowsay(ctx, message=response.text.strip())
 
 
 async def join(ctx):
