@@ -71,6 +71,8 @@ if not CREDS or not CREDS.valid:
     try:
         if CREDS and CREDS.expired and CREDS.refresh_token:
             CREDS.refresh(Request())
+        else:
+            raise RefreshError
     except RefreshError:
         flow = InstalledAppFlow.from_client_secrets_file(
             'credentials.json', SCOPES)
