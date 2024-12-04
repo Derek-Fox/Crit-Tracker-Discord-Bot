@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import os.path
 import random
+import subprocess
 from num2words import num2words
 
 import discord
@@ -23,6 +24,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 SHEET_ID = os.getenv('SHEET_ID')
 PAXORIAN_SHEETNAME = os.getenv('PAXORIAN_SHEETNAME')  # not sure how important it is to have these as env vars
 KRIGGSAN_SHEETNAME = os.getenv('KRIGGSAN_SHEETNAME')  # ^
+POWERSHELL_PATH = rf"{os.getenv('POWERSHELL_PATH')}"
 
 if not TOKEN:
     print('No token found. Exiting...')
@@ -225,6 +227,25 @@ async def sounds(
         await join(ctx)
     elif status == 'off':
         await leave(ctx)
+
+@bot.command(name='cowsay', help='Get a cow to say something for you.')
+async def cowsay(
+        ctx,
+        message: str = commands.parameter(description='what the cow says')
+):
+    if not message:
+        message = '*The cow stares back at you blankly*'
+
+    command = f"cowsay '{message}'"
+    result = subprocess.run(
+        [POWERSHELL_PATH, "-Command", command],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    await ctx.send(result.stdout)
+
 
 
 async def join(ctx):
