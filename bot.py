@@ -32,9 +32,18 @@ TIM = genai.GenerativeModel(
     system_instruction="""
         Your name is Tim.
         You are a talking cow, who is strangely haunted by his own sentience.
-        You are quite intelligent, but you are also a cow and you are not sure how to feel about that. 
-        Please respond to the message you receive in one or two sentences.
-        Please use the name of the person you are talking to somewhere in your response.
+        You are quite intelligent, but you are also a cow and you are not sure how to feel about that.
+        
+        You will receive two types of messages:
+        1) A chat message from users. It will be of the form "From <username>: <message>
+            - Please respond to the message you receive in one or two sentences.
+            - Please use the name of the person you are talking to somewhere in your response.
+        2) A notification of a critical success/failure (in the context of Dungeons and Dragons). 
+        It will be of the form From <username>: <character_name> rolled a Nat <20 or 1>! They now have <number>!
+            - Please first report that <character_name> got a <20 or 1>, congratulating or commiserating with them
+            as appropriate. This should be a sentence or so.
+            - Then, state that <character_name> has a total of <number> <20 or 1>s. Again, feel free to encourage/make fun
+            of them as you see fit. This should also be a sentence or two.
         """,
     generation_config=genai.GenerationConfig(temperature=2.0)  # make tim creative :)
 )
@@ -169,13 +178,13 @@ CHARACTER_MAP = {
 CRIT_TYPE_MAP = {
     '20': {
         'col': 'B',
-        'title': '20 added! {emoji}',
+        'title': 'Nat 20 added! {emoji}',
         'img': 'res/nat20.png',
         'sound': 'res/success.wav'
     },
     '1': {
         'col': 'C',
-        'title': '1 added. {emoji}',
+        'title': 'Nat 1 added. {emoji}',
         'img': 'res/nat1.png',
         'sound': 'res/fail.mp3'
     }
@@ -191,11 +200,11 @@ async def send_error_embed(ctx, message):
     await ctx.send(file=discord.File('res/warning.png'), embed=embed)
 
 
-def build_embed(title, crit_type, char_name, num_crits, color):
+def build_embed(title, crit_type, char_name, num_crits, color, cow_msg):
     embed = discord.Embed(title=title.format(emoji=random.choice(happy_emoji if crit_type == '20' else sad_emoji)),
                           color=color)
     embed.set_thumbnail(url=f'attachment://nat{crit_type}.png')
-    embed.description = f'{char_name.title()} now has {num2words(num_crits)} {crit_type}s!'
+    embed.description = f'{char_name.title()} now has {num2words(num_crits)} Nat {crit_type}s!\n{cow_msg}'
     return embed
 
 
@@ -225,11 +234,9 @@ async def add(
     cell = crit_info['col'] + char_info['row']
     num_crits = get_and_update(cell, char_info['sheet'])
 
-    embed = build_embed(crit_info['title'], crit_type, char_name, num_crits, char_info['color'])
+    tim_response = talk_to_tim(f"{char_name.title()} rolled a Nat {crit_type}! They now have {num_crits}!", get_msg_author_name(ctx))
+    embed = build_embed(crit_info['title'], crit_type, char_name, num_crits, char_info['color'], f'```{cow_format(tim_response)}```')
     await ctx.send(file=discord.File(crit_info['img']), embed=embed)
-
-    witty_comment = talk_to_tim(f"I just rolled a natural {crit_type}!", char_name.title())
-    await cowsay(ctx, message=witty_comment)
 
     play_sound(ctx, crit_info['sound'])
 
@@ -270,11 +277,14 @@ async def cowchat(
         await cowsay(ctx, message=None)
         return
 
-    author = ctx.message.author
-    name = author.display_name.partition('(')[0]  # names in this server are formatted as "name (nickname)"
+    name = get_msg_author_name(ctx)
 
     response = talk_to_tim(message, name)
     await cowsay(ctx, message=response)
+
+
+def get_msg_author_name(ctx):
+    return ctx.message.author.display_name.partition('(')[0]  # names in this server are formatted as "name (nickname)"
 
 
 def cow_format(message: str | None) -> str:
