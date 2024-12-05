@@ -27,17 +27,18 @@ POWERSHELL_PATH = rf"{os.getenv('POWERSHELL_PATH')}"
 
 # Initialize the model
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-COW_MODEL = genai.GenerativeModel("gemini-1.5-flash")
-COW_CHAT = COW_MODEL.start_chat(
-    history=[
-        {"role": "user", "parts": f"""
+TIM = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction="""
         Your name is Tim.
         You are a talking cow, who is strangely haunted by his own sentience.
         You are quite intelligent, but you are also a cow and you are not sure how to feel about that. 
         Please respond to the message you receive in one or two sentences.
-        """}
-    ]
+        Please use the name of the person you are talking to somewhere in your response.
+        """,
+    generation_config=genai.GenerationConfig(temperature=2.0)  # make tim creative :)
 )
+TIM_CHAT = TIM.start_chat()
 
 if not TOKEN:
     print('No token found. Exiting...')
@@ -141,7 +142,7 @@ async def on_ready():
 
 
 @bot.command(name='session', help='Increments the session number by one.')
-async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian')):
+async def session(ctx, campaign: str = commands.parameter(description='Campaign name, e.g. Paxorian.')):
     """Increments the session number by 1"""
     campaign_title = campaign.title()
     if campaign_title not in ['Paxorian', 'Kriggsan']:
@@ -208,28 +209,35 @@ def play_sound(ctx, sound):
 @bot.command(name='add', help='Adds a crit of the specified type to the specified character.')
 async def add(
         ctx,
-        crit_type: str = commands.parameter(description='Type of crit, 1 or 20'),
-        char_name: str = commands.parameter(description='Name of character, e.g. Morbo')
+        crit_type: str = commands.parameter(description='Type of crit, 1 or 20.'),
+        char_name: str = commands.parameter(description='Name of character, e.g. Morbo.')
 ):
     char_info = CHARACTER_MAP.get(char_name.upper())
     if not char_info:
         await send_error_embed(ctx, f'Received {char_name}, which is not a valid character name. Please try again.')
         return
+
     crit_info = CRIT_TYPE_MAP.get(crit_type)
     if not crit_info:
         await send_error_embed(ctx, f'Received {crit_type}, which is not a valid crit type. Please try again.')
         return
+
     cell = crit_info['col'] + char_info['row']
     num_crits = get_and_update(cell, char_info['sheet'])
+
     embed = build_embed(crit_info['title'], crit_type, char_name, num_crits, char_info['color'])
     await ctx.send(file=discord.File(crit_info['img']), embed=embed)
+
+    witty_comment = talk_to_tim(f"I just rolled a natural {crit_type}!", char_name.title())
+    await cowsay(ctx, message=witty_comment)
+
     play_sound(ctx, crit_info['sound'])
 
 
 @bot.command(name='sounds', help='Enable sounds for crits for the current channel.')
 async def sounds(
         ctx,
-        status: str = commands.parameter(description='on or off')
+        status: str = commands.parameter(description='On or off.')
 ):
     if status not in ['on', 'off']:
         await send_error_embed(ctx, f'Received {status}, which is not a valid status. Please try again.')
@@ -248,12 +256,37 @@ async def sounds(
 @bot.command(name='cowsay', help='Get a cow to say something for you.')
 async def cowsay(
         ctx,
-        *, message: str = commands.parameter(description='what the cow says', default=None)
+        *, message: str = commands.parameter(description='What you want the cow to say.', default=None)
+):
+    await ctx.send(f'```{cow_format(message)}```')
+
+
+@bot.command(name='cowchat', help='Have a conversation with Tim the cow.')
+async def cowchat(
+        ctx,
+        *, message: str = commands.parameter(description='What you say to the cow.', default=None)
 ):
     if not message:
-        message = '* The cow stares at you blankly *'
+        await cowsay(ctx, message=None)
+        return
+
+    author = ctx.message.author
+    name = author.display_name.partition('(')[0]  # names in this server are formatted as "name (nickname)"
+
+    response = talk_to_tim(message, name)
+    await cowsay(ctx, message=response)
+
+
+def cow_format(message: str | None) -> str:
+    """
+    Formats a message as a cow saying it using the cowsay subprocess.
+    :param message: The message to format.
+    :return: The formatted message.
+    """
+    if not message: message = '* The cow stares at you blankly *'
 
     command = f'cowsay "{message}"'
+
     result = subprocess.run(
         [POWERSHELL_PATH, "-Command", command],
         capture_output=True,
@@ -261,21 +294,18 @@ async def cowsay(
         check=True
     )
 
-    await ctx.send(f"```{result.stdout}```")
+    return result.stdout
 
 
-@bot.command(name='cowchat', help='have a conversation with a cow')
-async def cowchat(
-        ctx,
-        *, message: str = commands.parameter(description='what you say to the cow',
-                                             default=None)
-):
-    if not message:
-        await cowsay(ctx, message=None)
-        return
-
-    response = COW_CHAT.send_message(message)
-    await cowsay(ctx, message=response.text.strip())
+def talk_to_tim(message: str, name: str) -> str:
+    """
+    Sends a message to Tim and returns his response.
+    :param message: The message to send to Tim.
+    :param name: The name of the person sending the message.
+    :return: Tim's response text with newline stripped.
+    """
+    message = f"From {name}: {message}"
+    return TIM_CHAT.send_message(message).text.strip()
 
 
 async def join(ctx):
