@@ -28,7 +28,7 @@ POWERSHELL_PATH = rf"{os.getenv('POWERSHELL_PATH')}"
 # Initialize the model
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 TIM = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.0-flash",
     system_instruction="""
         Your name is Tim.
         You are a talking cow, who is strangely haunted by his own sentience.
