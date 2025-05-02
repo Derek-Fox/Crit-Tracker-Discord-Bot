@@ -3,3 +3,4 @@ credentials.json
 token.json
 start_bot.bat
 run_bot.vbs
+*.log
