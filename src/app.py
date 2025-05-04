@@ -44,6 +44,7 @@ def load_env() -> dict:
         "SHEET_ID": getenv("SHEET_ID"),
         "PWSH_PATH": rf"{getenv('PWSH_PATH')}",
         "GEMINI_KEY": getenv("GEMINI_API_KEY"),
+        "BASH_PATH": rf"{getenv('BASH_PATH')}"
     }
 
     for key, value in env.items():
@@ -55,7 +56,7 @@ def load_env() -> dict:
 
 
 def init_model(env: dict):
-    with open("./tim_config.json") as f:
+    with open("./src/tim_config.json") as f:
         tim_config = json.load(f)
 
     try:

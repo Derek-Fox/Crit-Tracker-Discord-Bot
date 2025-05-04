@@ -45,11 +45,12 @@ class Tim:
         self.sad_emoji = list("😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫")
         self.sheet_handler = sheet_handler
         self.tim_chat = tim_chat
-        self.pwsh_path = env["PWSH_PATH"]
+        self.pwsh_path = env['PWSH_PATH']
+        self.bash_path = env['BASH_PATH']
 
         self.INTENTS = discord.Intents.default()
         self.INTENTS.message_content = True
-        logging.info("Discord intents configured to allow message content.")
+        logging.info('Discord intents configured to allow message content.')
 
         bot = commands.Bot(command_prefix="$", intents=self.INTENTS,
             description="This bot will add crits directly to the spreadsheet for you!",
@@ -231,7 +232,7 @@ class Tim:
             description="What you say to the cow.", default=None
         ),
     ):
-        logging.info(f"Received 'cowchat' command from user '{ctx.author}'.")
+        logging.info(f"Received 'cowchat' command from user '{ctx.author}'. {message=}")
 
         if not message:
             logging.info(
@@ -263,11 +264,18 @@ class Tim:
             )
             message = "* The cow stares at you blankly *"
 
-        command = f'cowsay "{message}"'
-        logging.info(f"Running cowsay command.")
+        # command = f'cowsay "{message}"'
+        logging.info(f"Running cowsay command with {message=}.")
+
+        # import platform
+        # if platform.system() == 'Windows':
+        #     args = [self.pwsh_path, "-Command"]
+        # else:
+        #     args = [self.bash_path]
+        # args.append(command)
 
         result = subprocess.run(
-            [self.pwsh_path, "-Command", command],
+            ["cowsay", f"{message}"],
             capture_output=True,
             text=True,
             check=True,
@@ -312,3 +320,6 @@ class Tim:
                 f"User '{ctx.author}' attempted to use 'leave' command but bot is not in a voice channel."
             )
             await self.send_error_embed(ctx, "I am not in a voice channel.")
+    
+    def run(self, token: str):
+        self.bot.run(token=token)
