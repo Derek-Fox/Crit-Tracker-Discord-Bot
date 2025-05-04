@@ -10,7 +10,6 @@ from googleapiclient.errors import HttpError
 
 
 class SheetsHandler:
-
     def __init__(self, sheet_id):
         self.sheet_id = sheet_id
         scopes = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -27,19 +26,26 @@ class SheetsHandler:
                     logging.info("Refreshing credentials...")
                     self.creds.refresh(Request())
                 else:
-                    logging.warning("No valid credentials found. Starting oAuth flow...")
+                    logging.warning(
+                        "No valid credentials found. Starting OAuth flow..."
+                    )
                     raise RefreshError
             except RefreshError:
-                flow = InstalledAppFlow.from_client_secrets_file("credentials.json", scopes)
-                flow.authorization_url(access_type="offline", include_granted_scopes="true")
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    "credentials.json", scopes
+                )
+                flow.authorization_url(
+                    access_type="offline", include_granted_scopes="true"
+                )
                 self.creds = flow.run_local_server(port=0)
                 logging.info("OAuth flow completed successfully.")
             with open("token.json", "w", encoding="UTF-8") as token:
                 token.write(self.creds.to_json())
                 logging.info("Credentials saved to token.json")
 
-
-    def update_values(self, spreadsheet_id, subsheet_id, range_name, value_input_option, _values):
+    def update_values(
+        self, spreadsheet_id, subsheet_id, range_name, value_input_option, _values
+    ):
         """Updates values on the spreadsheet in the given range with given values"""
         range_name = f"{subsheet_id}!{range_name}"
         try:
@@ -67,7 +73,6 @@ class SheetsHandler:
             )
             return error
 
-
     def get_values(self, spreadsheet_id, subsheet_id, range_name):
         """Returns values from the spreadsheet from the specified range"""
         range_name = f"{subsheet_id}!{range_name}"
@@ -93,11 +98,12 @@ class SheetsHandler:
             )
             return error
 
-
     def get_and_update(self, cell, subsheet_id):
         """Increments the value of the given cell by 1."""
         value = self.get_values(self.sheet_id, subsheet_id, cell).get("values", [])
 
-        self.pdate_values(self.sheet_id, subsheet_id, cell, "USER_ENTERED", [[int(value[0][0]) + 1]])
+        self.pdate_values(
+            self.sheet_id, subsheet_id, cell, "USER_ENTERED", [[int(value[0][0]) + 1]]
+        )
 
         return int(value[0][0]) + 1

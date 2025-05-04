@@ -1,15 +1,10 @@
 import json
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 import colorlog
 from dotenv import load_dotenv
 from os import getenv
 import google.generativeai as genai
-from google.auth.exceptions import RefreshError
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
 from sheets import SheetsHandler
 from bot import Tim
 
@@ -60,7 +55,7 @@ def load_env() -> dict:
 
 
 def init_model(env: dict):
-    with open("./genai/tim_config.json") as f:
+    with open("./tim_config.json") as f:
         tim_config = json.load(f)
 
     try:
@@ -90,9 +85,9 @@ def main():
 
     sheets = SheetsHandler(env['SHEET_ID'])
     
-    bot = Tim()
+    bot = Tim(sheets, tim_chat, env)
 
-    bot.run(os.getenv("DISCORD_TOKEN"))
+    bot.run(getenv("DISCORD_TOKEN"))
 
 
 if __name__ == "__main__":
