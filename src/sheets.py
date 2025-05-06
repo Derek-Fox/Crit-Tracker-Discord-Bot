@@ -102,7 +102,7 @@ class SheetsHandler:
         """Increments the value of the given cell by 1."""
         value = self.get_values(self.sheet_id, subsheet_id, cell).get("values", [])
 
-        self.pdate_values(
+        self.update_values(
             self.sheet_id, subsheet_id, cell, "USER_ENTERED", [[int(value[0][0]) + 1]]
         )
 

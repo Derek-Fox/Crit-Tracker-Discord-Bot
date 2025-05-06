@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from os import getenv
 import google.generativeai as genai
 from sheets import SheetsHandler
-from bot import Tim
+from bot import init_bot
 
 
 def config_logging():
@@ -86,7 +86,7 @@ def main():
 
     sheets = SheetsHandler(env['SHEET_ID'])
     
-    bot = Tim(sheets, tim_chat, env)
+    bot = init_bot(sheets, tim_chat, env)
 
     bot.run(getenv("DISCORD_TOKEN"))
 
