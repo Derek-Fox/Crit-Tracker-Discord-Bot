@@ -12,40 +12,52 @@ from googleapiclient.errors import HttpError
 class SheetsHandler:
     def __init__(self, sheet_id):
         self.sheet_id = sheet_id
-        scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+        self.scopes = ["https://www.googleapis.com/auth/spreadsheets"]
         self.creds = None
+        self.initialize_credentials()
+
+    def initialize_credentials(self):
+        """Initialize credentials by loading from token.json or starting OAuth flow."""
         if os.path.exists("token.json"):
-            logging.info("Found token.json. Attempting to load credentials...")
-            self.creds = Credentials.from_authorized_user_file("token.json", scopes)
+            self.load_credentials_from_file()
         else:
             logging.warning("token.json not found. Beginning authentication...")
 
         if not self.creds or not self.creds.valid:
-            try:
-                if self.creds and self.creds.expired and self.creds.refresh_token:
-                    logging.info("Refreshing credentials...")
-                    self.creds.refresh(Request())
-                else:
-                    logging.warning(
-                        "No valid credentials found. Starting OAuth flow..."
-                    )
-                    raise RefreshError
-            except RefreshError:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    "credentials.json", scopes
-                )
-                flow.authorization_url(
-                    access_type="offline", include_granted_scopes="true"
-                )
-                self.creds = flow.run_local_server(port=0)
-                logging.info("OAuth flow completed successfully.")
-            with open("token.json", "w", encoding="UTF-8") as token:
-                token.write(self.creds.to_json())
-                logging.info("Credentials saved to token.json")
+            self.refresh_or_authenticate_credentials()
+
+    def load_credentials_from_file(self):
+        logging.info("Loading credentials from token.json...")
+        self.creds = Credentials.from_authorized_user_file("token.json", self.scopes)
+
+    def refresh_or_authenticate_credentials(self):
+        try:
+            if self.creds and self.creds.expired and self.creds.refresh_token:
+                self.refresh_credentials()
+            else:
+                self.start_oauth_flow()
+        except RefreshError:
+            self.start_oauth_flow()
+
+    def refresh_credentials(self):
+        logging.info("Refreshing credentials...")
+        self.creds.refresh(Request())
+
+    def start_oauth_flow(self):
+        logging.warning("No valid credentials found. Starting OAuth flow...")
+        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", self.scopes)
+        flow.authorization_url(access_type="offline", include_granted_scopes="true")
+        self.creds = flow.run_local_server(port=0)
+        logging.info("OAuth flow completed successfully.")
+        self.save_credentials_to_file()
+
+    def save_credentials_to_file(self):
+        with open("token.json", "w", encoding="UTF-8") as token_file:
+            token_file.write(self.creds.to_json())
+            logging.info("Credentials saved to token.json")
 
     def update_values(
-        self, spreadsheet_id, subsheet_id, range_name, value_input_option, _values
-    ):
+        self, spreadsheet_id, subsheet_id, range_name, _values, value_input_option="USER_ENTERED"):
         """Updates values on the spreadsheet in the given range with given values"""
         range_name = f"{subsheet_id}!{range_name}"
         try:
@@ -98,12 +110,11 @@ class SheetsHandler:
             )
             return error
 
-    def get_and_update(self, cell, subsheet_id):
-        """Increments the value of the given cell by 1."""
+    def increment_cell(self, cell, subsheet_id) -> int:
+        """Increments the value of the given cell on the given subsheet by 1."""
         value = self.get_values(self.sheet_id, subsheet_id, cell).get("values", [])
+        new_value = int(value[0][0]) + 1
 
-        self.update_values(
-            self.sheet_id, subsheet_id, cell, "USER_ENTERED", [[int(value[0][0]) + 1]]
-        )
+        self.update_values(self.sheet_id, subsheet_id, cell, [[new_value]])
 
-        return int(value[0][0]) + 1
+        return new_value

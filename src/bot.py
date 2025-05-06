@@ -49,7 +49,7 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
                 f"Received {campaign}, which is not a valid campaign name. Please try again.",
             )
             return
-        new_session_number = sheet_handler.get_and_update("H2", campaign_title)
+        new_session_number = sheet_handler.increment_cell("H2", campaign_title)
         await ctx.send(
             embed=discord.Embed(
                 title=f"Session number is now {new_session_number}", color=0xA2C4C9
@@ -120,7 +120,7 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
         logging.info(
             f"Updating crit count for character '{char_name}' in cell '{cell}' on sheet '{char_info['sheet']}'."
         )
-        num_crits = sheet_handler.get_and_update(cell, char_info["sheet"])
+        num_crits = sheet_handler.increment_cell(cell, char_info["sheet"])
 
         logging.info(
             f"Crit count for '{char_name}' updated successfully. New count: {num_crits}."
