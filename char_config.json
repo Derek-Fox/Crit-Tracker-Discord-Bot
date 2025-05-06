@@ -1,0 +1,73 @@
+{
+  "character_map": {
+    "ZOHAR": {
+      "color": 9332547,
+      "sheet": "Paxorian",
+      "row": "2"
+    },
+    "MORBO": {
+      "color": 3698973,
+      "sheet": "Paxorian",
+      "row": "3"
+    },
+    "GRUNT": {
+      "color": 0,
+      "sheet": "Paxorian",
+      "row": "4"
+    },
+    "CELEMINE": {
+      "color": 3444597,
+      "sheet": "Paxorian",
+      "row": "5"
+    },
+    "ORWYND": {
+      "color": 15429041,
+      "sheet": "Paxorian",
+      "row": "6"
+    },
+    "CIRRUS": {
+      "color": 14277076,
+      "sheet": "Kriggsan",
+      "row": "2"
+    },
+    "DAELAN": {
+      "color": 13369344,
+      "sheet": "Kriggsan",
+      "row": "3"
+    },
+    "LAVENDER": {
+      "color": 16711935,
+      "sheet": "Kriggsan",
+      "row": "4"
+    },
+    "LORELAI": {
+      "color": 606091,
+      "sheet": "Kriggsan",
+      "row": "5"
+    },
+    "TORMYTH": {
+      "color": 3444597,
+      "sheet": "Kriggsan",
+      "row": "6"
+    },
+    "TEST": {
+      "color": 0,
+      "sheet": "Paxorian",
+      "row": "50"
+    }
+  },
+  "crit_type_map": {
+    "1": {
+      "col": "C",
+      "title": "Nat 1 added. {emoji}",
+      "img": "res/nat1.png",
+      "sound": "res/fail.mp3"
+    },
+    "20": {
+      "col": "B",
+      "title": "Nat 20 added! {emoji}",
+      "img": "res/nat20.png",
+      "sound": "res/success.wav"
+    }
+  }
+}

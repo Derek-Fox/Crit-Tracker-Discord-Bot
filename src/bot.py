@@ -10,42 +10,12 @@ from num2words import num2words
 import logging
 
 
-def init_bot(sheet_handler, tim_chat, env):
-    character_map = {
-        "ZOHAR": {"color": 0x8E7CC3, "sheet": "Paxorian", "row": "2"},
-        "MORBO": {"color": 0x38761D, "sheet": "Paxorian", "row": "3"},
-        "GRUNT": {"color": 0x000000, "sheet": "Paxorian", "row": "4"},
-        "CELEMINE": {"color": 0x351C75, "sheet": "Paxorian", "row": "5"},
-        "ORWYND": {"color": 0xEB7AB1, "sheet": "Paxorian", "row": "6"},
-        "CIRRUS": {"color": 0xD8E5F4, "sheet": "Kriggsan", "row": "2"},
-        "DAELAN": {"color": 0xCC0000, "sheet": "Kriggsan", "row": "3"},
-        "LAVENDER": {"color": 0xFF00FF, "sheet": "Kriggsan", "row": "4"},
-        "LORELAI": {"color": 0x09438B, "sheet": "Kriggsan", "row": "5"},
-        "TORMYTH": {"color": 0x351C75, "sheet": "Kriggsan", "row": "6"},
-        "TEST": {"color": 0x000000, "sheet": "Paxorian", "row": "50"},
-    }
-
-    crit_type_map = {
-        "20": {
-            "col": "B",
-            "title": "Nat 20 added! {emoji}",
-            "img": "res/nat20.png",
-            "sound": "res/success.wav",
-        },
-        "1": {
-            "col": "C",
-            "title": "Nat 1 added. {emoji}",
-            "img": "res/nat1.png",
-            "sound": "res/fail.mp3",
-        },
-    }
+def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
+    character_map = char_config["character_map"]
+    crit_type_map = char_config["crit_type_map"]
 
     happy_emoji = list("😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏")
     sad_emoji = list("😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫")
-    sheet_handler = sheet_handler
-    tim_chat = tim_chat
-    pwsh_path = env["PWSH_PATH"]
-    bash_path = env["BASH_PATH"]
 
     INTENTS = discord.Intents.default()
     INTENTS.message_content = True
@@ -247,16 +217,17 @@ def init_bot(sheet_handler, tim_chat, env):
         :return: The formatted message.
         """
         if not message:
-            logging.info('No message provided for cow_format.')
-            message = '* The cow stares at you blankly *'
+            logging.info("No message provided for cow_format.")
+            message = "* The cow stares at you blankly *"
 
-        logging.info(f'Running cowsay command with {message=}.')
+        logging.info(f"Running cowsay command with {message=}.")
 
         import platform
-        if platform.system() == 'Windows':
-            args = [pwsh_path, '-Command', f'cowsay {message}']
+
+        if platform.system() == "Windows":
+            args = [pwsh_path, "-Command", f"cowsay {message}"]
         else:
-            args = ['cowsay', message]
+            args = ["cowsay", message]
 
         result = subprocess.run(
             args=args,
@@ -264,7 +235,7 @@ def init_bot(sheet_handler, tim_chat, env):
             text=True,
             check=True,
         )
-        logging.info('Cowsay command executed successfully.')
+        logging.info("Cowsay command executed successfully.")
         return result.stdout
 
     def talk_to_tim(message: str, name: str) -> str:
