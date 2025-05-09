@@ -225,6 +225,7 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
         import platform
 
         if platform.system() == "Windows":
+            logging.info(rf"Windows platform detected, using Powershell at path {pwsh_path}.")
             args = [pwsh_path, "-Command", f"cowsay {message}"]
         else:
             args = ["cowsay", message]
