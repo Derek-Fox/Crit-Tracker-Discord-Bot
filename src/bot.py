@@ -10,9 +10,10 @@ from num2words import num2words
 import logging
 
 
-def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
-    character_map = char_config["character_map"]
-    crit_type_map = char_config["crit_type_map"]
+def init_bot(sheet_handler, tim_chat, pwsh_path, config):
+    campaigns: list[str] = config["campaigns"]
+    characters: dict[str, dict] = config["characters"]
+    crit_types: dict[str, dict] = config["crit_types"]
 
     happy_emoji = list("😀😁😃😄😆😉😊😋😎😍🙂🤗🤩😏")
     sad_emoji = list("😞😒😟😠🙁😣😖😨😰😧😢😥😭😵‍💫")
@@ -42,20 +43,17 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
         ctx,
         campaign: str = commands.parameter(description="Campaign name, e.g. Paxorian."),
     ):
-        campaign_title = campaign.title()
-        if campaign_title not in ["Paxorian", "Kriggsan"]:
+        if campaign.upper() not in campaigns:
             await send_error_embed(
                 ctx,
-                f"Received {campaign}, which is not a valid campaign name. Please try again.",
+                f"Received invalid campaign {campaign}. Please try again.",
             )
             return
-        new_session_number = sheet_handler.increment_cell("H2", campaign_title)
-        await ctx.send(
-            embed=discord.Embed(
-                title=f"Session number is now {new_session_number}", color=0xA2C4C9
-            )
-        )
-        logging.info(f"Campaign {campaign_title} incremented to {new_session_number}.")
+
+        new_session_number = sheet_handler.increment_cell("H2", campaign.title())
+        msg = f"Campaign {campaign.title()} incremented to {new_session_number}."
+        await ctx.send(embed=discord.Embed(title=msg, color=0xA2C4C9))
+        logging.info(msg)
 
     async def send_error_embed(ctx, message):
         embed = discord.Embed(
@@ -67,7 +65,8 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
     def build_crit_embed(title, crit_type, char_name, num_crits, color, cow_msg):
         embed = discord.Embed(
             title=title.format(
-                emoji=random.choice(happy_emoji if crit_type == "20" else sad_emoji)
+                crit_type=crit_type,
+                emoji=random.choice(happy_emoji if crit_type == "20" else sad_emoji),
             ),
             color=color,
         )
@@ -94,25 +93,25 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
             f"Received 'add' command from user '{ctx.author}' with crit_type='{crit_type}' and char_name='{char_name}'."
         )
 
-        char_info = character_map.get(char_name.upper())
+        char_info = characters.get(char_name.upper())
         if not char_info:
             logging.warning(
                 f"Invalid character name '{char_name}' provided by user '{ctx.author}'."
             )
             await send_error_embed(
                 ctx,
-                f"Received {char_name}, which is not a valid character name. Please try again.",
+                f"Received invalid character '{char_name}'. Please try again.",
             )
             return
 
-        crit_info = crit_type_map.get(crit_type)
+        crit_info = crit_types.get(crit_type)
         if not crit_info:
             logging.warning(
                 f"Invalid crit type '{crit_type}' provided by user '{ctx.author}'."
             )
             await send_error_embed(
                 ctx,
-                f"Received {crit_type}, which is not a valid crit type. Please try again.",
+                f"Received invalid crit type '{crit_type}'. Please try again.",
             )
             return
 
@@ -130,7 +129,7 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
             get_msg_author_name(ctx),
         )
         embed = build_crit_embed(
-            crit_info["title"],
+            "Nat {crit_type} added! {emoji}",
             crit_type,
             char_name,
             num_crits,
@@ -154,7 +153,7 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
             )
             await send_error_embed(
                 ctx,
-                f"Received {status}, which is not a valid status. Please try again.",
+                f"Received invalid status {status}. Please try again.",
             )
             return
 
@@ -225,7 +224,9 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, char_config):
         import platform
 
         if platform.system() == "Windows":
-            logging.info(rf"Windows platform detected, using Powershell at path {pwsh_path}.")
+            logging.info(
+                rf"Windows platform detected, using Powershell at path {pwsh_path}."
+            )
             args = [pwsh_path, "-Command", f"cowsay {message}"]
         else:
             args = ["cowsay", message]

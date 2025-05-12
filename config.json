@@ -1,0 +1,106 @@
+{
+  "campaigns": [
+    "PAXORIAN",
+    "KRIGGSAN",
+    "GELIDUS"
+  ],
+  "characters": {
+    "ZOHAR": {
+      "color": 9332547,
+      "sheet": "Paxorian",
+      "row": "2"
+    },
+    "MORBO": {
+      "color": 3698973,
+      "sheet": "Paxorian",
+      "row": "3"
+    },
+    "GRUNT": {
+      "color": 0,
+      "sheet": "Paxorian",
+      "row": "4"
+    },
+    "CELEMINE": {
+      "color": 3444597,
+      "sheet": "Paxorian",
+      "row": "5"
+    },
+    "ORWYND": {
+      "color": 15429041,
+      "sheet": "Paxorian",
+      "row": "6"
+    },
+    "CIRRUS": {
+      "color": 14277076,
+      "sheet": "Kriggsan",
+      "row": "2"
+    },
+    "DAELAN": {
+      "color": 13369344,
+      "sheet": "Kriggsan",
+      "row": "3"
+    },
+    "LAVENDER": {
+      "color": 16711935,
+      "sheet": "Kriggsan",
+      "row": "4"
+    },
+    "LORELAI": {
+      "color": 606091,
+      "sheet": "Kriggsan",
+      "row": "5"
+    },
+    "TORMYTH": {
+      "color": 3444597,
+      "sheet": "Kriggsan",
+      "row": "6"
+    },
+    "CINTOL": {
+      "color": 0,
+      "sheet": "Gelidus",
+      "row": "2"
+    },
+    "AEVA": {
+      "color": 0,
+      "sheet": "Gelidus",
+      "row": "3"
+    },
+    "REGIS": {
+      "color": 0,
+      "sheet": "Gelidus",
+      "row": "4"
+    },
+    "IO": {
+      "color": 0,
+      "sheet": "Gelidus",
+      "row": "5"
+    },
+    "TOPHER": {
+      "color": 0,
+      "sheet": "Gelidus",
+      "row": "6"
+    },
+    "TEST": {
+      "color": 0,
+      "sheet": "Paxorian",
+      "row": "50"
+    }
+  },
+  "crit_types": {
+    "1": {
+      "col": "C",
+      "img": "res/nat1.png",
+      "sound": "res/fail.mp3"
+    },
+    "20": {
+      "col": "B",
+      "img": "res/nat20.png",
+      "sound": "res/success.wav"
+    }
+  },
+  "tim_config": {
+    "model_name": "gemini-2.0-flash",
+    "instruction": "Your name is Tim. You are a talking cow, who is strangely haunted by his own sentience. You are quite intelligent, but you are also a cow and you are not sure how to feel about that. You will receive two types of messages: 1) A chat message from users. It will be of the form `From <username>: <message>` - Please respond to the message you receive in one or two sentences. - Please use the name of the person you are talking to somewhere in your response. 2) A notification of a critical success or failure (in the context of Dungeons and Dragons). It will be of the form `From <username>: <character_name> rolled a Nat <20 or 1>! They now have <number>!` - Please first report that <character_name> got a <20 or 1>, congratulating or commiserating with them as appropriate. This should be a sentence or so. - Then, state that <character_name> has a total of <number> <20 or 1>s. Again, feel free to encourage/make fun of them as you see fit. This should also be a sentence or two. Use no newline characters in your response. Discord user @CatAlvord is your best friend in the whole wide world.",
+    "temperature": 2
+  }
+}

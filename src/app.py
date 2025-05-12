@@ -9,7 +9,7 @@ from sheets import SheetsHandler
 from bot import init_bot
 
 
-def config_logging():
+def init_logs():
     fmt = "%(asctime)s - %(levelname)s - %(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
 
@@ -37,11 +37,8 @@ def config_logging():
     discord_logger.propagate = False
 
 
-def init_model(config_file: str, gemini_key):
+def init_model(tim_config: dict, gemini_key):
     try:
-        with open(config_file) as f:
-            tim_config = json.load(f)
-
         genai.configure(api_key=gemini_key)
         tim = genai.GenerativeModel(
             model_name=tim_config["model_name"],
@@ -51,48 +48,40 @@ def init_model(config_file: str, gemini_key):
             ),
         )
         tim_chat = tim.start_chat()
-        logging.info("Tim genai model initialized successfully")
+        logging.info("Tim genai model initialized successfully.")
         return tim_chat
-    except FileNotFoundError as e:
-        logging.error(f"Config file not found: {config_file}")
-        raise (e)
-    except json.JSONDecodeError as e:
-        logging.error(f"Failed to parse JSON in config file: {config_file}")
-        raise (e)
     except Exception as e:
         logging.error(f"Failed to initialize Tim model: {e}")
         raise (e)
 
 
-def load_chars(config_file: str):
+def load_config(config_file: str):
     try:
         with open(config_file) as f:
-            char_config = json.load(f)
-        logging.info("Character configuration loaded successfully")
-        return char_config
+            config = json.load(f)
+        logging.info(f"Config for {len(config['characters'])} characters loaded.")
+        logging.info(f"Config for {len(config['crit_types'])} crit types loaded.")
+        return config
     except FileNotFoundError as e:
-        logging.error(f"Character config file not found: {config_file}")
+        logging.error(f"Config file not found: {config_file}")
         raise (e)
     except json.JSONDecodeError:
-        logging.error(f"Failed to parse JSON in character config file: {config_file}")
+        logging.error(f"Failed to parse JSON in config file: {config_file}")
         raise (e)
     except Exception as e:
-        logging.error(f"Unexpected error while loading character config: {e}")
+        logging.error(f"Unexpected error while loading config: {e}")
         raise (e)
 
 
 def main():
     try:
-        config_logging()
+        init_logs()
         load_dotenv()
-
-        tim_chat = init_model(getenv("TIM_CONFIG"), getenv("GEMINI_KEY"))
-
+        config = load_config("./config.json")
         sheets = SheetsHandler(getenv("SHEET_ID"))
-
-        chars = load_chars(getenv("CHAR_CONFIG"))
-
-        bot = init_bot(sheets, tim_chat, getenv("PWSH_PATH"), chars)
+        tim_chat = init_model(config["tim_config"], getenv("GEMINI_KEY"))
+        
+        bot = init_bot(sheets, tim_chat, getenv("PWSH_PATH"), config)
 
         bot.run(getenv("DISCORD_TOKEN"))
     except Exception as e:

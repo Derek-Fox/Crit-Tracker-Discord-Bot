@@ -40,7 +40,7 @@ class SheetsHandler:
             self.start_oauth_flow()
 
     def refresh_credentials(self):
-        logging.info("Refreshing credentials...")
+        logging.info("Attempting to refresh credentials...")
         self.creds.refresh(Request())
 
     def start_oauth_flow(self):
