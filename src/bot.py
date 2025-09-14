@@ -195,7 +195,7 @@ def init_bot(sheet_handler, tim_chat, pwsh_path, config):
             logging.info(
                 f"No message provided for 'cowchat' by user '{ctx.author}'. Sending default cow response."
             )
-            await cowsay(ctx, message=None)
+            await cowsay(ctx)
             return
 
         name = get_msg_author_name(ctx)
