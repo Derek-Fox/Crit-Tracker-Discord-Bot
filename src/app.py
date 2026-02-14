@@ -65,7 +65,7 @@ def load_config(config_file: str):
     except FileNotFoundError as e:
         logging.error(f"Config file not found: {config_file}")
         raise (e)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         logging.error(f"Failed to parse JSON in config file: {config_file}")
         raise (e)
     except Exception as e:
@@ -80,10 +80,13 @@ def main():
         config = load_config("./config.json")
         sheets = SheetsHandler(getenv("SHEET_ID"))
         tim_chat = init_model(config["tim_config"], getenv("GEMINI_KEY"))
-        
+
         bot = init_bot(sheets, tim_chat, getenv("PWSH_PATH"), config)
 
-        bot.run(getenv("DISCORD_TOKEN"))
+        if discord_token := getenv("DISCORD_TOKEN"):
+            bot.run(discord_token)
+        else:
+            raise(Exception("DISCORD_TOKEN not found"))
     except Exception as e:
         logging.critical(f"Critical error in main execution: {e}", exc_info=True)
         exit(1)
