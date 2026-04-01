@@ -23,10 +23,10 @@ from bot import init_bot
 
 
 def init_logs():
-    '''
-    Initializes logging for the application, setting up both file and console handlers 
+    """
+    Initializes logging for the application, setting up both file and console handlers
     with appropriate formatting and log levels.
-    '''
+    """
     fmt = "%(asctime)s - %(levelname)s - %(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
 
@@ -55,12 +55,12 @@ def init_logs():
 
 
 def init_model(tim_config: dict, gemini_key):
-    '''
+    """
     Initializes the GenAI model (Tim) with the provided configuration and API key.
-    
+
     :param tim_config: Configuration dictionary for the Tim model, including model name, system instruction, and generation parameters.
     :param gemini_key: API key for authenticating with the GenAI service.
-    '''
+    """
     try:
         genai.configure(api_key=gemini_key)
         tim = genai.GenerativeModel(
@@ -79,12 +79,12 @@ def init_model(tim_config: dict, gemini_key):
 
 
 def load_config(config_file: str):
-    '''
+    """
     Loads the configuration from a JSON file, logging the number of characters and crit types loaded.
-    
+
     :param config_file: Path to the JSON configuration file
     :return: Configuration dictionary loaded from the file
-    '''
+    """
     try:
         with open(config_file, encoding="UTF-8") as f:
             config = json.load(f)
@@ -158,11 +158,11 @@ def load_google_credentials(
 
 
 async def main():
-    '''
+    """
     Main entry point for the application. Initializes logging, loads configuration and credentials,
     sets up the GenAI model, and starts the Discord bot. Handles exceptions gracefully, logging
     critical errors and exiting if initialization fails.
-    '''
+    """
     try:
         init_logs()
         load_dotenv()
@@ -176,7 +176,7 @@ async def main():
         bot = await init_bot(sheets, tim_chat, getenv("PWSH_PATH"), config)
 
         if discord_token := getenv("DISCORD_TOKEN"):
-            bot.run(discord_token)
+            await bot.start(discord_token)
         else:
             raise Exception("DISCORD_TOKEN not found")
     except Exception as e:
