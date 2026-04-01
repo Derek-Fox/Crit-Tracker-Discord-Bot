@@ -19,9 +19,7 @@ class ChatCog(commands.Cog):
         self,
         ctx,
         *,
-        message: str = commands.parameter(
-            description="What you want the cow to say.", default=None
-        ),
+        message: str = commands.parameter(description="What you want the cow to say.", default=None),
     ):
         logging.info("Received 'cowsay' command from user '%s'.", ctx.author)
         formatted_message = cow_format(message, self.pwsh_path)
@@ -33,9 +31,7 @@ class ChatCog(commands.Cog):
         self,
         ctx,
         *,
-        message: str = commands.parameter(
-            description="What you say to the cow.", default=None
-        ),
+        message: str = commands.parameter(description="What you say to the cow.", default=None),
     ):
         logging.info(
             "Received 'cowchat' command from user '%s'. message=%s", ctx.author, message

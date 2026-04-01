@@ -88,9 +88,7 @@ class CritCog(commands.Cog):
         self,
         ctx,
         crit_type: str = commands.parameter(description="Type of crit, 1 or 20."),
-        char_name: str = commands.parameter(
-            description="Name of character, e.g. Morbo."
-        ),
+        char_name: str = commands.parameter(description="Name of character, e.g. Morbo."),
     ):
         '''
         Adds a crit to the spreadsheet for a given character and crit type, 
