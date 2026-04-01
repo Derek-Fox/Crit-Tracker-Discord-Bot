@@ -25,6 +25,7 @@ async def init_bot(sheet_handler, tim_chat, pwsh_path, config):
     # Set up intents for the bot to allow message content, which is required for command processing and responding to user messages.
     intents = discord.Intents.default()
     intents.message_content = True
+    intents.voice_states = True
     logging.info("Discord intents configured to allow message content.")
 
     # Initialize the bot
