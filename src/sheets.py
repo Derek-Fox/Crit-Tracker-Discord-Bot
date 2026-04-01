@@ -30,7 +30,6 @@ class SheetsHandler:
         subsheet_id,
         range_name,
         _values,
-        value_input_option="USER_ENTERED",
     ):
         """Updates values on the spreadsheet in the given range with given values"""
         range_name = f"{subsheet_id}!{range_name}"
@@ -44,7 +43,7 @@ class SheetsHandler:
                 .update(
                     spreadsheetId=spreadsheet_id,
                     range=range_name,
-                    valueInputOption=value_input_option,
+                    valueInputOption="USER_ENTERED",
                     body=body,
                 )
                 .execute()

@@ -62,6 +62,7 @@ def init_model(tim_config: dict, gemini_key):
     :param gemini_key: API key for authenticating with the GenAI service.
     """
     try:
+        # TODO: Update to new google genai API?
         genai.configure(api_key=gemini_key)
         tim = genai.GenerativeModel(
             model_name=tim_config["model_name"],
@@ -103,7 +104,7 @@ def load_config(config_file: str):
 
 
 def load_google_credentials(
-    credentials_file: str, token_file: str = "token.json"
+    credentials_file: str, token_file: str
 ) -> Credentials | ExternalAccountCredentials:
     """Load Google credentials, refreshing or authenticating as needed.
 
@@ -139,7 +140,12 @@ def load_google_credentials(
         logging.info("Starting OAuth flow using %s...", credentials_file)
         try:
             flow = InstalledAppFlow.from_client_secrets_file(credentials_file, scopes)
-            creds = flow.run_local_server(host="127.0.0.1", port=8080, redirect_uri_trailing_slash=True, open_browser=True)
+            creds = flow.run_local_server(
+                host="127.0.0.1",
+                port=8080,
+                redirect_uri_trailing_slash=True,
+                open_browser=True,
+            )
 
             # Save credentials for future use
             with open(token_file, "w", encoding="UTF-8") as f:
@@ -168,7 +174,7 @@ async def main():
         load_dotenv()
         config = load_config("./config.json")
 
-        google_creds = load_google_credentials("./credentials.json")
+        google_creds = load_google_credentials("./credentials.json", "./token.json")
         sheets = SheetsHandler(getenv("SHEET_ID"), google_creds)
 
         tim_chat = init_model(config["tim_config"], getenv("GEMINI_KEY"))
