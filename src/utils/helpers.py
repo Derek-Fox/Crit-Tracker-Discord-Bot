@@ -49,6 +49,7 @@ def talk_to_tim(message: str, name: str, tim_chat) -> str:
     """
     logging.info("Sending message to Tim: '%s' from user '%s'.", message, name)
     try:
+        message = f'From {name}: {message}'
         response = tim_chat.send_message(message).text.strip()
         logging.info("Received response from Tim: %s", response)
         return response
