@@ -2,12 +2,14 @@ aiohappyeyeballs==2.6.1
 aiohttp==3.13.5
 aiosignal==1.4.0
 annotated-types==0.7.0
+async-timeout==5.0.1
 attrs==26.1.0
 certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.6
 colorlog==6.10.1
 cryptography==46.0.6
+davey==0.1.5
 discord.py==2.7.1
 docopt==0.6.2
 dotenv==0.9.9
@@ -35,6 +37,7 @@ pyasn1_modules==0.4.2
 pycparser==3.0
 pydantic==2.12.5
 pydantic_core==2.41.5
+PyNaCl==1.5.0
 pyparsing==3.3.2
 python-dotenv==1.2.2
 requests==2.33.1
