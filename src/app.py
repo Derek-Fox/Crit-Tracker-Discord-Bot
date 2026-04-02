@@ -27,7 +27,7 @@ def init_logs():
     Initializes logging for the application, setting up both file and console handlers
     with appropriate formatting and log levels.
     """
-    fmt = "%(asctime)s - %(levelname)s - %(message)s"
+    fmt = "%(asctime)s - %(levelname)s - %(message)s - %(name)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
 
     file_handler = RotatingFileHandler("./out.log", maxBytes=1_000_000, backupCount=3)
@@ -50,9 +50,8 @@ def init_logs():
 
     logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, console_handler])
 
-    discord_logger = logging.getLogger("discord")
-    discord_logger.propagate = False
-
+    logging.getLogger("discord").propagate = False
+    logging.getLogger("requests_oauthlib.oauth2_session").setLevel(logging.INFO)
 
 def init_model(tim_config: dict, gemini_key):
     """
