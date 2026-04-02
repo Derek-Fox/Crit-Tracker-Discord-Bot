@@ -30,6 +30,11 @@
       "sheet": "Paxorian",
       "row": "6"
     },
+    "SHOO": {
+      "color": 16309907,
+      "sheet": "Paxorian",
+      "row": "7"
+    },
     "CIRRUS": {
       "color": 14277076,
       "sheet": "Kriggsan",
@@ -54,6 +59,16 @@
       "color": 3444597,
       "sheet": "Kriggsan",
       "row": "6"
+    },
+    "CHALA": {
+      "color": 10875898,
+      "sheet": "Kriggsan",
+      "row": "7"
+    },
+    "THUD": {
+      "color": 1351088,
+      "sheet": "Kriggsan",
+      "row": "8"
     },
     "CINTOL": {
       "color": 11674887,
