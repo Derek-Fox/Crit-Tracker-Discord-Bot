@@ -17,3 +17,10 @@ class CoreCog(commands.Cog):
         logging.info("Bot logged in as %s.", self.bot.user)
         game = discord.Game("$help")
         await self.bot.change_presence(status=discord.Status.dnd, activity=game)
+
+    @commands.command()
+    @commands.is_owner()
+    async def sync(self, ctx: commands.Context) -> None:
+        """Sync commands"""
+        synced = await ctx.bot.tree.sync()
+        await ctx.send(f"Synced {len(synced)} commands globally")
