@@ -58,7 +58,7 @@ def talk_to_tim(message: str, name: str, tim_chat) -> str:
         return "Tim is having trouble responding right now."
 
 
-async def send_error_embed(ctx, message):
+async def send_error_embed(inter: discord.Interaction, message):
     '''
     Sends an error embed to the given context with the given message.
     
@@ -69,7 +69,7 @@ async def send_error_embed(ctx, message):
         title="**Error**", description=message, color=discord.Color.red()
     )
     embed.set_thumbnail(url="attachment://warning.png")
-    await ctx.send(file=discord.File("res/warning.png"), embed=embed)
+    await inter.response.send_message(file=discord.File("res/warning.png"), embed=embed)
 
 
 def play_sound(ctx, sound):

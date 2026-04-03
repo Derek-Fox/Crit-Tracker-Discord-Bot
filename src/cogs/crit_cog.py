@@ -6,6 +6,7 @@ such as adding crits and incrementing session numbers.
 import random
 import logging
 import discord
+from discord import app_commands
 from discord.ext import commands
 from num2words import num2words
 
@@ -57,30 +58,38 @@ class CritCog(commands.Cog):
         self.characters: dict[str, dict] = config["characters"]
         self.crit_types: dict[str, dict] = config["crit_types"]
 
-    @commands.command(name="session", help="Increments the session number by one.")
+    dnd_commands = app_commands.Group(name="dnd", description="Commands to manage Dnd stuff (crits, sessions).")
+
+    @dnd_commands.command(name="session", description="Increments the session number by one.")
+    @app_commands.choices(campaign=[
+        app_commands.Choice(name="Kriggsan", value="KRIGGSAN"),
+        app_commands.Choice(name="Paxorian", value="PAXORIAN"),
+    ])
     async def session(
         self,
-        ctx,
-        campaign: str = commands.parameter(description="Campaign name, e.g. Paxorian."),
+        inter: discord.Interaction,
+        campaign: str #= commands.parameter(description="Campaign name, e.g. Paxorian."),
     ):
         """
         Increments the session number for a given campaign by one.
         """
+
         logging.info(
             "Received 'session' command from user '%s' with campaign='%s'.",
-            ctx.author,
+            inter.user.display_name,
             campaign,
         )
+
         if campaign.upper() not in self.campaigns:
             await send_error_embed(
-                ctx,
+                inter,
                 f"Received invalid campaign {campaign}. Please try again.",
             )
             return
 
         new_session_number = self.sheet_handler.increment_cell("H2", campaign.title())
         msg = f"Campaign {campaign.title()} incremented to {new_session_number}."
-        await ctx.send(embed=discord.Embed(title=msg, color=0xA2C4C9))
+        await inter.response.send_message(embed=discord.Embed(title=msg, color=0xA2C4C9))
         logging.info(msg)
 
     @commands.command(name="add", help="Adds a crit to the spreadsheet.")
