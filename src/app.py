@@ -50,14 +50,15 @@ def init_logs():
 
     logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, console_handler])
 
-    logging.getLogger("discord").propagate = False
+    logging.getLogger("discord").setLevel(logging.INFO)
     logging.getLogger("requests_oauthlib.oauth2_session").setLevel(logging.INFO)
+
 
 def init_model(tim_config: dict, gemini_key):
     """
     Initializes the GenAI model (Tim) with the provided configuration and API key.
 
-    :param tim_config: Configuration dictionary for the Tim model, including model name, system instruction, and generation parameters.
+    :param tim_config: Configuration for Tim, including model name, system instruction, and generation parameters.
     :param gemini_key: API key for authenticating with the GenAI service.
     """
     try:
@@ -75,7 +76,7 @@ def init_model(tim_config: dict, gemini_key):
         return tim_chat
     except Exception as e:
         logging.error("Failed to initialize Tim model: %s", e)
-        raise (e)
+        raise e
 
 
 def load_config(config_file: str):
@@ -93,17 +94,17 @@ def load_config(config_file: str):
         return config
     except FileNotFoundError as e:
         logging.error("Config file not found: %s", config_file)
-        raise (e)
+        raise e
     except json.JSONDecodeError as e:
         logging.error("Failed to parse JSON in config file: %s", config_file)
-        raise (e)
+        raise e
     except Exception as e:
         logging.error("Unexpected error while loading config: %s", e)
-        raise (e)
+        raise e
 
 
 def load_google_credentials(
-    credentials_file: str, token_file: str
+        credentials_file: str, token_file: str
 ) -> Credentials | ExternalAccountCredentials:
     """Load Google credentials, refreshing or authenticating as needed.
 
