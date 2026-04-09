@@ -10,7 +10,6 @@ class CoreCog(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
 
-    
     @commands.Cog.listener()
     async def on_ready(self):
         """Sets up the bot's status"""
@@ -19,8 +18,10 @@ class CoreCog(commands.Cog):
         await self.bot.change_presence(status=discord.Status.dnd, activity=game)
 
     @commands.command()
-    @commands.is_owner()
     async def sync(self, ctx: commands.Context) -> None:
         """Sync commands"""
+        # guild = discord.Object(id=1075506578209378444)
+        # synced = await ctx.bot.tree.sync(guild=guild)
+        # await ctx.send(f"Synced {len(synced)} commands to guild {guild}")
         synced = await ctx.bot.tree.sync()
         await ctx.send(f"Synced {len(synced)} commands globally")
