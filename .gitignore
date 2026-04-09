@@ -5,3 +5,4 @@ token.json
 *.bat
 *.log
 venv
+.idea
