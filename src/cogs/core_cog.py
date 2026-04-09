@@ -1,6 +1,6 @@
-'''
+"""
 Handles core bot events and functionality, such as setting the bot's status on startup.
-'''
+"""
 import logging
 import discord
 from discord.ext import commands
@@ -18,10 +18,10 @@ class CoreCog(commands.Cog):
         await self.bot.change_presence(status=discord.Status.dnd, activity=game)
 
     @commands.command()
+    @commands.is_owner()
+    @commands.cooldown(rate=1, per=60, type=commands.BucketType.user)
+    @commands.dm_only()
     async def sync(self, ctx: commands.Context) -> None:
-        """Sync commands"""
-        # guild = discord.Object(id=1075506578209378444)
-        # synced = await ctx.bot.tree.sync(guild=guild)
-        # await ctx.send(f"Synced {len(synced)} commands to guild {guild}")
+        """Sync slash commands to discord"""
         synced = await ctx.bot.tree.sync()
         await ctx.send(f"Synced {len(synced)} commands globally")
