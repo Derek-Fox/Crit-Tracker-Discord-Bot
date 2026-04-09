@@ -18,7 +18,7 @@ async def init_bot(sheet_handler, tim_chat, pwsh_path, config):
     Initializes the Discord bot with the specified cogs and configurations.
 
     :param sheet_handler: SheetsHandler instance for interacting with Google Sheets
-    :param tim_chat: Tim chat instance for GenAI interactions
+    :param tim_chat: Tim chat instance for GenAI responses
     :param pwsh_path: Path to PowerShell executable
     :param config: Configuration dictionary for the bot
     """
