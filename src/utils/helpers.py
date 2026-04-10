@@ -3,6 +3,7 @@ Contains helper functions for the bot, such as formatting messages and sending e
 """
 
 import logging
+import os
 import subprocess
 import platform
 import discord
@@ -46,9 +47,14 @@ def talk_to_tim(message: str, name: str, tim_chat) -> str:
     Sends a message to Tim and returns his response.
     :param message: The message to send to Tim.
     :param name: The name of the person sending the message.
-    :tim_chat: The Tim chat object.
+    :param tim_chat: The Tim chat object.
     :return: Tim's response text with newline stripped.
+
+    Note: If the environment variable "NO_TIM" is set (to any value) then the A.I.
+    model will not be run and a stock response will be returned.
     """
+    if os.getenv("NO_TIM"): return "Tim is disabled right now. Unset NO_TIM to get him back."
+
     logging.info("Sending message to Tim: '%s' from user '%s'.", message, name)
     try:
         message = f'From {name}: {message}'
@@ -84,7 +90,7 @@ def play_sound(inter: discord.Interaction, sound):
     :param inter: The interaction which asked to play the sound.
     :param sound: The path to the sound file to play.
     """
-    if inter.user.voice:
+    if inter.guild and inter.guild.voice_client:
         source = FFmpegPCMAudio(sound)
         inter.guild.voice_client.play(source)
         logging.info("Sound '%s' played in channel '%s'.", sound, voice.channel)
