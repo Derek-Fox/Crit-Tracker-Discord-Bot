@@ -64,6 +64,8 @@ class ChatCog(commands.Cog):
         response = talk_to_tim(message, name, self.tim_chat)
         logging.info("Received response from Tim the cow.")
 
-        formatted_message = cow_format(response, self.pwsh_path)
-        await inter.followup.send(f"```{formatted_message}```")
+        await inter.followup.send(embed=(discord.Embed(
+            title="Tim says...",
+            description=f"{name} said to Tim: \"{message}\"\n```{cow_format(response, self.pwsh_path)}```",
+        )))
         logging.info("Formatted cow message sent to user '%s'.", inter.user.display_name)
