@@ -18,17 +18,16 @@ async def init_bot(sheet_handler, tim_chat, pwsh_path, config):
     Initializes the Discord bot with the specified cogs and configurations.
 
     :param sheet_handler: SheetsHandler instance for interacting with Google Sheets
-    :param tim_chat: Tim chat instance for GenAI interactions
+    :param tim_chat: Tim chat instance for GenAI responses
     :param pwsh_path: Path to PowerShell executable
     :param config: Configuration dictionary for the bot
     """
-    # Set up intents for the bot to allow message content, which is required for command processing and responding to user messages.
+
     intents = discord.Intents.default()
     intents.message_content = True
     intents.voice_states = True
     logging.info("Discord intents configured to allow message content.")
 
-    # Initialize the bot
     bot = commands.Bot(
         command_prefix="$",
         intents=intents,
@@ -37,7 +36,6 @@ async def init_bot(sheet_handler, tim_chat, pwsh_path, config):
     )
     logging.info("Discord bot instance created successfully.")
 
-    # Load cogs for functionality
     await bot.add_cog(CoreCog(bot))
     await bot.add_cog(CritCog(bot, sheet_handler, tim_chat, pwsh_path, config))
     await bot.add_cog(ChatCog(bot, tim_chat, pwsh_path))

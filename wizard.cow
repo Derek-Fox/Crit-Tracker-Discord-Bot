@@ -1,0 +1,8 @@
+$the_cow = <<"EOC";
+        $thoughts     /\\
+         $thoughts __/* \\__
+          $thoughts  ($eyes)_______
+             (__)       )\\/\\
+                ||----w |
+                ||     ||
+EOC
