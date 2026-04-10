@@ -101,7 +101,7 @@ class CritCog(commands.Cog):
 
         new_session_number = self.sheet_handler.increment_cell("H2", campaign.title())
         msg = f"Campaign {campaign.title()} incremented to {new_session_number}."
-        await inter.response.edit_original_message(
+        await inter.edit_original_response(
             embed=discord.Embed(title=msg, color=0xA2C4C9)
         )
         logging.info(msg)

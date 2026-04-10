@@ -94,7 +94,7 @@ def play_sound(inter: discord.Interaction, sound):
     if inter.guild and inter.guild.voice_client:
         source = FFmpegPCMAudio(sound)
         inter.guild.voice_client.play(source)
-        logging.info("Sound '%s' played in channel '%s'.", sound, voice.channel)
+        logging.info("Sound '%s' played in channel '%s'.", sound, inter.guild.voice_client.channel)
 
 
 def get_msg_author_name(inter):
