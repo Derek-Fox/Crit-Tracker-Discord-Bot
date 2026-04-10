@@ -179,13 +179,16 @@ class CritCog(commands.Cog):
             self.tim_chat,
         )
 
+        eyes = "$$" if crit_type == "20" else "XX"
+        cow_msg = cow_format(tim_response, self.pwsh_path, eyes)
+
         embed = build_crit_embed(
             "Nat {crit_type} added! {emoji}",
             crit_type,
             char_name,
             num_crits,
             char_info["color"],
-            f"```{cow_format(tim_response, self.pwsh_path)}```",
+            f"```{cow_msg}```",
         )
         await inter.followup.send(file=discord.File(crit_info["img"]), embed=embed)
         logging.info("Response sent to user '%s' for 'add' command.", inter.user.display_name)
