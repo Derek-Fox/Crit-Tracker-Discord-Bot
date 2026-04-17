@@ -28,15 +28,13 @@ class SheetsHandler:
         self,
         spreadsheet_id,
         subsheet_id,
-        range_name,
-        _values,
+        _range_name,
+        values,
     ):
         """Updates values on the spreadsheet in the given range with given values"""
-        range_name = f"{subsheet_id}!{range_name}"
+        range_name = f"{subsheet_id}!{_range_name}"
         try:
             service = build("sheets", "v4", credentials=self.creds)
-            body = {"values": _values}
-            # pylint: disable=maybe-no-member
             result = (
                 service.spreadsheets()
                 .values()
@@ -44,7 +42,7 @@ class SheetsHandler:
                     spreadsheetId=spreadsheet_id,
                     range=range_name,
                     valueInputOption="USER_ENTERED",
-                    body=body,
+                    body={"values": values},
                 )
                 .execute()
             )

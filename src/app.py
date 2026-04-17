@@ -50,11 +50,12 @@ def init_logs():
 
     logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, console_handler])
 
+    # Prevent discord and google-oauth loggers from spamming the logs with debug info
     logging.getLogger("discord").setLevel(logging.INFO)
     logging.getLogger("requests_oauthlib.oauth2_session").setLevel(logging.INFO)
 
 
-def init_model(tim_config: dict, gemini_key):
+def init_model(tim_config: dict, gemini_key: str) -> genai.ChatSession:
     """
     Initializes the GenAI model (Tim) with the provided configuration and API key.
 
@@ -79,7 +80,7 @@ def init_model(tim_config: dict, gemini_key):
         raise e
 
 
-def load_config(config_file: str):
+def load_config(config_file: str) -> Any:
     """
     Loads the configuration from a JSON file, logging the number of characters and crit types loaded.
 
@@ -163,7 +164,7 @@ def load_google_credentials(
     return creds
 
 
-async def main():
+async def main() -> None:
     """
     Main entry point for the application. Initializes logging, loads configuration and credentials,
     sets up the GenAI model, and starts the Discord bot. Handles exceptions gracefully, logging

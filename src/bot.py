@@ -22,7 +22,6 @@ async def init_bot(sheet_handler, tim_chat, pwsh_path, config):
     :param pwsh_path: Path to PowerShell executable
     :param config: Configuration dictionary for the bot
     """
-
     intents = discord.Intents.default()
     intents.message_content = True
     intents.voice_states = True
