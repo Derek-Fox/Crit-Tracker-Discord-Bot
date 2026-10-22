@@ -80,7 +80,7 @@ def init_model(tim_config: dict, gemini_key: str) -> genai.ChatSession:
         raise e
 
 
-def load_config(config_file: str) -> Any:
+def load_config(config_file: str):
     """
     Loads the configuration from a JSON file, logging the number of characters and crit types loaded.
 
