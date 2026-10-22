@@ -62,7 +62,7 @@ def talk_to_tim(message: str, name: str, tim_chat) -> str:
         response = tim_chat.send_message(message).text.strip()
         logging.info("Received response from Tim: %s", response)
         return response
-    except (AttributeError, ValueError) as e:
+    except Exception as e:
         logging.error("Error communicating with Tim: %s", e)
         return "Tim is having trouble responding right now."
 

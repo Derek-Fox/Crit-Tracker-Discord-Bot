@@ -11,7 +11,7 @@ from logging.handlers import RotatingFileHandler
 from os import getenv, path
 import colorlog
 from dotenv import load_dotenv
-import google.generativeai as genai
+
 from google.oauth2.credentials import Credentials
 from google.auth.external_account_authorized_user import (
     Credentials as ExternalAccountCredentials,
@@ -20,6 +20,7 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from sheets import SheetsHandler
 from bot import init_bot
+from ollama_chat import OllamaChat
 
 
 def init_logs():
@@ -55,25 +56,22 @@ def init_logs():
     logging.getLogger("requests_oauthlib.oauth2_session").setLevel(logging.INFO)
 
 
-def init_model(tim_config: dict, gemini_key: str) -> genai.ChatSession:
+def init_model(tim_config: dict) -> OllamaChat:
     """
-    Initializes the GenAI model (Tim) with the provided configuration and API key.
+    Initializes Tim via a local Ollama model (no Google AI dependency).
 
-    :param tim_config: Configuration for Tim, including model name, system instruction, and generation parameters.
-    :param gemini_key: API key for authenticating with the GenAI service.
+    :param tim_config: Configuration for Tim, including system instruction,
+                        temperature, and optional ollama_model name.
     """
     try:
-        # TODO: Update to new google genai API?
-        genai.configure(api_key=gemini_key)
-        tim = genai.GenerativeModel(
-            model_name=tim_config["model_name"],
+        model = getenv("OLLAMA_MODEL") or tim_config.get("ollama_model", "gemma4:e2b")
+        temperature = tim_config.get("temperature", 1.0)
+        tim_chat = OllamaChat(
+            model=model,
             system_instruction=tim_config["instruction"],
-            generation_config=genai.GenerationConfig(
-                temperature=tim_config["temperature"]
-            ),
+            temperature=temperature,
         )
-        tim_chat = tim.start_chat()
-        logging.info("Tim genai model initialized successfully.")
+        logging.info("Tim Ollama model initialized successfully.")
         return tim_chat
     except Exception as e:
         logging.error("Failed to initialize Tim model: %s", e)
@@ -178,7 +176,7 @@ async def main() -> None:
         google_creds = load_google_credentials("./credentials.json", "./token.json")
         sheets = SheetsHandler(getenv("SHEET_ID"), google_creds)
 
-        tim_chat = init_model(config["tim_config"], getenv("GEMINI_KEY"))
+        tim_chat = init_model(config["tim_config"])
 
         bot = await init_bot(sheets, tim_chat, getenv("PWSH_PATH"), config)
 
