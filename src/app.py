@@ -1,7 +1,7 @@
 """
 Main entry point for the Crit Tracker Discord Bot application.
 This file initializes logging, loads configuration, sets up Google Sheets credentials,
-initializes the GenAI model, and starts the Discord bot.
+initializes the Ollama model, and starts the Discord bot.
 """
 
 import asyncio
@@ -56,26 +56,126 @@ def init_logs():
     logging.getLogger("requests_oauthlib.oauth2_session").setLevel(logging.INFO)
 
 
+LOCAL_DEFAULT_HOST = "http://127.0.0.1:11434"
+CLOUD_DEFAULT_HOST = "https://ollama.com"
+LOCAL_DEFAULT_MODEL = "gemma4:e2b"
+
+
+def resolve_ollama_config(tim_config: dict) -> dict:
+    """Resolve a normalized Ollama configuration from env + config.
+
+    Layered precedence (highest to lowest):
+        1. Environment variables
+        2. ``tim_config["ollama"]`` block (or legacy flat keys)
+        3. Defaults based on backend.
+
+    Returns a dict with keys: backend, model, host, api_key, timeout.
+    Raises ValueError on missing/invalid required values.
+    """
+    block = {}
+    if isinstance(tim_config.get("ollama"), dict):
+        block = tim_config["ollama"]
+
+    # ---- backend ----
+    env_backend = getenv("OLLAMA_BACKEND")
+    backend = (env_backend or block.get("backend") or "local").strip().lower()
+    if backend not in {"local", "cloud"}:
+        backend = "local"
+
+    # ---- host ----
+    host = (
+        getenv("OLLAMA_HOST")
+        or block.get("host")
+        or tim_config.get("ollama_host")
+        or (CLOUD_DEFAULT_HOST if backend == "cloud" else LOCAL_DEFAULT_HOST)
+    )
+    host = (host or "").strip().rstrip("/")
+    if not host or not host.startswith(("http://", "https://")):
+        raise ValueError(f"Invalid Ollama host: {host!r}")
+
+    # ---- api key ----
+    api_key = getenv("OLLAMA_API_KEY") or block.get("api_key") or tim_config.get("ollama_api_key")
+    key_file = (
+        getenv("OLLAMA_API_KEY_FILE")
+        or block.get("api_key_file")
+        or tim_config.get("ollama_api_key_file")
+    )
+    if not api_key and key_file and os.path.isfile(key_file):
+        with open(key_file, encoding="utf-8") as f:
+            api_key = f.read().strip()
+
+    # Promote backend to cloud if the host/key indicate it.
+    if backend == "local" and ("ollama.com" in host or (bool(api_key) and not host.startswith("http://127.0.0.1"))):
+        backend = "cloud"
+
+    # ---- model ----
+    model = (
+        getenv("OLLAMA_MODEL")
+        or block.get("model")
+        or tim_config.get("ollama_model")
+        or LOCAL_DEFAULT_MODEL
+    )
+    model = (model or "").strip()
+    if "ollama.com" in host and model.endswith(":cloud"):
+        model = model[: -len(":cloud")]
+    if not model:
+        raise ValueError("Ollama model name is empty.")
+
+    # ---- timeout ----
+    raw_timeout = getenv("OLLAMA_TIMEOUT")
+    if raw_timeout is None:
+        raw_timeout = block.get("timeout")
+    try:
+        timeout = float(raw_timeout) if raw_timeout is not None else None
+    except (TypeError, ValueError):
+        raise ValueError(f"Invalid OLLAMA_TIMEOUT: {raw_timeout!r}")
+
+    # ---- validation ----
+    if backend == "cloud" or "ollama.com" in host:
+        if not api_key:
+            raise ValueError(
+                "Ollama cloud backend requires an API key. "
+                "Set OLLAMA_API_KEY (or OLLAMA_API_KEY_FILE / "
+                "tim_config['ollama']['api_key_file'])."
+            )
+
+    resolved_backend = "cloud" if "ollama.com" in host else backend
+    return {
+        "backend": resolved_backend,
+        "model": model,
+        "host": host,
+        "api_key": api_key,
+        "timeout": timeout,
+    }
+
+
 def init_model(tim_config: dict) -> OllamaChat:
     """
-    Initializes Tim via a local Ollama model (no Google AI dependency).
+    Initializes Tim via Ollama, supporting both local and cloud backends.
 
-    :param tim_config: Configuration for Tim, including system instruction,
-                        temperature, and optional ollama_model name.
+    Resolution is centralized in :func:`resolve_ollama_config`.
     """
     try:
-        model = getenv("OLLAMA_MODEL") or tim_config.get("ollama_model", "gemma4:e2b")
+        cfg = resolve_ollama_config(tim_config)
         temperature = tim_config.get("temperature", 1.0)
         tim_chat = OllamaChat(
-            model=model,
+            model=cfg["model"],
             system_instruction=tim_config["instruction"],
             temperature=temperature,
+            host=cfg["host"],
+            api_key=cfg["api_key"],
+            timeout=cfg["timeout"],
         )
-        logging.info("Tim Ollama model initialized successfully.")
+        logging.info(
+            "Tim Ollama model initialized: backend=%s model=%s host=%s.",
+            cfg["backend"],
+            cfg["model"],
+            cfg["host"],
+        )
         return tim_chat
     except Exception as e:
         logging.error("Failed to initialize Tim model: %s", e)
-        raise e
+        raise
 
 
 def load_config(config_file: str):
@@ -140,10 +240,7 @@ def load_google_credentials(
         try:
             flow = InstalledAppFlow.from_client_secrets_file(credentials_file, scopes)
             creds = flow.run_local_server(
-                host="127.0.0.1",
-                port=8080,
-                redirect_uri_trailing_slash=True,
-                open_browser=True,
+                host="127.0.0.1", port=8080, redirect_uri_trailing_slash=True, open_browser=True
             )
 
             # Save credentials for future use

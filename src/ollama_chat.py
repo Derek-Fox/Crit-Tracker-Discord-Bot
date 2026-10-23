@@ -1,20 +1,16 @@
 """
-Local (Ollama) backend for "Tim the Magic Cow".
+Ollama backend (local and cloud) for "Tim the Magic Cow".
 
 Wraps the official `ollama` Python client behind a Gemini-like interface:
     chat = OllamaChat(...)
     chat.send_message(text).text  -> str
-
-This lets the Discord bot run Tim locally via Ollama without changing the cogs
-or helpers that depend on the Gemini API shape, while removing the Google AI
-dependency entirely on this branch.
 """
 
 import logging
 import os
+from typing import Optional
 
-import ollama
-from ollama import Client, ResponseError, RequestError
+from ollama import Client
 
 
 class _Response:
@@ -30,15 +26,36 @@ class OllamaChat:
         model: str,
         system_instruction: str,
         temperature: float = 1.0,
-        host: str | None = None,
+        host: Optional[str] = None,
+        api_key: Optional[str] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         self.model = model
-        self.host = host or os.getenv("OLLAMA_HOST") or "http://127.0.0.1:11434"
-        self.client = Client(host=self.host)
-        self.messages = [{"role": "system", "content": system_instruction}]
+        self.host = (
+            host or os.getenv("OLLAMA_HOST") or "http://127.0.0.1:11434"
+        ).rstrip("/")
+        self.api_key = api_key if api_key is not None else os.getenv("OLLAMA_API_KEY")
         self.temperature = temperature
+        self.timeout = timeout
+
+        headers = (
+            {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
+        )
+        kwargs = {}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
+        self.client = Client(host=self.host, **kwargs)
+        if headers:
+            self.client._client.headers.update(headers)
+
+        self.messages = [{"role": "system", "content": system_instruction}]
+
+        backend = "cloud" if "ollama.com" in self.host else "local"
         logging.info(
-            "Tim Ollama model '%s' initialized (host=%s).", model, self.host
+            "Tim Ollama model '%s' initialized (backend=%s, host=%s).",
+            model,
+            backend,
+            self.host,
         )
 
     def send_message(self, message: str) -> _Response:
@@ -49,16 +66,17 @@ class OllamaChat:
                 messages=self.messages,
                 options={"temperature": self.temperature},
             )
-            reply = ""
-            try:
-                reply = (response.message.content or "").strip()
-            except (AttributeError, TypeError):
-                reply = ""
-        except Exception as e:
-            logging.error("Error communicating with Tim (Ollama): %s", e)
-            # Roll back the user message so history stays consistent.
+        except Exception as e:  # Defensive: never propagate transport/API errors.
+            logging.error("Error communicating with Tim (Ollama): %s", e, exc_info=True)
             self.messages.pop()
             return _Response("Tim is having trouble responding right now.")
+
+        reply = ""
+        try:
+            reply = (response.message.content or "")
+        except (AttributeError, TypeError):
+            reply = ""
+        reply = reply.strip()
 
         self.messages.append({"role": "assistant", "content": reply})
         return _Response(reply)
