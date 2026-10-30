@@ -1,25 +1,14 @@
 # Crit Tracker Discord Bot
 
-A personal Dungeons & Dragons crit-tracking bot for Discord. This project listens for slash commands and updates a Google Sheet with Nat 20 and Nat 1 totals for characters across multiple campaigns. It also includes a talking cow named Tim, powered by Gemini, for fun flavor text and chat responses.
+A personal Dungeons & Dragons crit-tracking bot for Discord. This project listens for slash commands and updates a Google Sheet with Nat 20 and Nat 1 totals for characters across multiple campaigns. It also includes a talking cow named Tim, powered by Ollama using either a local Ollama server or Ollama Cloud, for fun flavor text and chat responses.
 
-This is a highly opinionated, heavily customized project intended for a specific use case. The character roster, campaign names, spreadsheet layout, and message formatting are all configured in code and in the JSON config file. That said, it is easy to adapt to your own table if you want to repurpose it.
-
----
-
-## Overview
-
-The bot does four main things:
-
-- Tracks critical hits for characters in a Google Sheet
-- Lets you increment campaign session numbers from Discord
-- Provides chat and formatting features using a custom "cow" aesthetic
-- Plays sound effects in a voice channel when critical events happen
-
-The app is built around a Discord bot using `discord.py`, a Google Sheets API wrapper, and a Gemini-powered chat model for Tim the Magic Cow.
+This is a highly opinionated, heavily customized project intended for a specific use case. The character roster, campaign names, spreadsheet layout, and message formatting are all configured in code and in the JSON config file; adapt these pieces when repurposing the bot for your own table.
 
 ---
 
-## Feature summary
+## Features
+
+The app combines `discord.py` slash commands, a Google Sheets backend, and a pluggable Ollama chat model (local or cloud) for Tim the Magic Cow.
 
 ### 1. Crit tracking
 
@@ -37,10 +26,10 @@ The `/session` command increments the session counter for a specified campaign. 
 
 ### 3. Tim the Magic Cow
 
-The bot includes a custom AI personality called Tim. It is configured in `config.json` and uses Google Gemini for responses. There are two related commands:
+Tim is configured in `config.json`. Its prompt and Ollama backend (local or cloud) power two commands:
 
-- `/cowchat` to talk to Tim directly
-- `/cowsay` to format a message as ASCII art from a cartoon cow
+- `/cowchat` — Talk to Tim directly
+- `/cowsay` — Format a message as ASCII art from a cartoon cow
 
 These responses are wrapped using the `cowsay` utility and a custom `wizard.cow` template.
 
@@ -73,6 +62,7 @@ The project authenticates with Google Sheets using OAuth and stores the resultin
 ├── src/
 │   ├── app.py
 │   ├── bot.py
+│   ├── ollama_chat.py
 │   ├── sheets.py
 │   ├── cogs/
 │   │   ├── __init__.py
@@ -88,7 +78,8 @@ The project authenticates with Google Sheets using OAuth and stores the resultin
 Key files:
 
 - `config.json` contains campaigns, character mappings, crit columns, and Tim settings
-- `src/app.py` boots the app, loads config, authenticates with Google, initializes Gemini, and starts the bot
+- `src/app.py` boots the app, loads config, authenticates with Google, initializes Tim's Ollama client, and starts the bot
+- `src/ollama_chat.py` resolves Ollama settings and manages Tim's chat history and requests
 - `src/bot.py` registers the Discord cogs
 - `src/sheets.py` handles Google Sheets read/write operations
 - `src/cogs/crit_cog.py` contains the crit-tracking commands
@@ -104,7 +95,7 @@ Before running the bot, make sure you have:
 - A Discord bot token
 - A Google Cloud project with the Google Sheets API enabled
 - A `credentials.json` OAuth client file from Google Cloud
-- A Gemini API key
+- Ollama installed and running locally, or an Ollama Cloud API key
 - The `cowsay` package installed on your system
 - PowerShell (`pwsh`) if you are running on Linux/macOS and want the Windows-compatible PowerShell path used by the code
 
@@ -157,27 +148,50 @@ If these are missing, the bot will not be able to render embed images or play so
 
 ## Environment variables and configuration
 
-Create a `.env` file in the project root. This app uses `python-dotenv` to load the following values:
+Create a `.env` file in the project root. This app uses `python-dotenv` to load the following values. For a local Ollama server, only the bot and Google Sheets settings are needed; Ollama uses the local defaults shown below. For Ollama Cloud, set `OLLAMA_BACKEND=cloud` and provide `OLLAMA_API_KEY`.
 
 ```env
 DISCORD_TOKEN=your_discord_bot_token
-GEMINI_KEY=your_gemini_api_key
 SHEET_ID=your_google_sheet_id
 PWSH_PATH=/usr/bin/pwsh
-# optional
-NO_TIM=1
+# optional: uncomment to disable Tim
+# NO_TIM=1
+# Optional Ollama settings (local defaults shown)
+OLLAMA_BACKEND=local
+OLLAMA_HOST=http://127.0.0.1:11434
+OLLAMA_MODEL=gemma4:e2b
+
+# Cloud example:
+# OLLAMA_BACKEND=cloud
+# OLLAMA_HOST=https://ollama.com
+# OLLAMA_MODEL=your-cloud-model
+# OLLAMA_API_KEY=your_ollama_cloud_api_key
 ```
 
 ### Required variables
 
 - `DISCORD_TOKEN`: The Discord bot token from the Discord Developer Portal
-- `GEMINI_KEY`: The API key for Google Generative AI / Gemini
 - `SHEET_ID`: The ID of the Google Sheet the bot should update
 - `PWSH_PATH`: Path to the PowerShell executable used by the `cowsay` helper on Windows or when using a PowerShell-based invocation path
 
+### Ollama variables
+
+- `OLLAMA_BACKEND`: `local` or `cloud`; defaults to `local`
+- `OLLAMA_HOST`: Ollama server URL; defaults to `http://127.0.0.1:11434` for local or `https://ollama.com` for cloud
+- `OLLAMA_MODEL`: model name; defaults to `gemma4:e2b`
+- `OLLAMA_API_KEY`: API key for Ollama Cloud; required when using the cloud backend
+- `OLLAMA_API_KEY_FILE`: optional path to a file containing the cloud API key
+- `OLLAMA_TIMEOUT`: optional request timeout in seconds
+
+Environment variables take precedence over the `tim_config.ollama` settings in `config.json`. The API key can also be set in that config block or loaded from its `api_key_file` value. Avoid committing API keys or other secrets.
+
 ### Optional variable
 
-- `NO_TIM`: If set to any value, Tim is disabled and the bot returns a placeholder response instead of calling Gemini.
+- `NO_TIM`: enables Tim's placeholder mode; when set, Ollama is not called
+
+### Ollama setup
+
+For local inference, install Ollama, start its service, and download the configured model with `ollama pull gemma4:e2b` when using the default. Confirm the service is reachable from the bot. For Ollama Cloud, use the cloud endpoint and a valid API key; no local model download is needed.
 
 ---
 
@@ -271,9 +285,14 @@ The primary configuration lives in `config.json`.
     }
   },
   "tim_config": {
-    "model_name": "gemini-2.5-flash",
     "instruction": "Your name is Tim...",
-    "temperature": 1
+    "temperature": 1,
+    "ollama": {
+      "backend": "local",
+      "model": "gemma4:e2b",
+      "host": "http://127.0.0.1:11434",
+      "timeout": 120
+    }
   }
 }
 ```
@@ -283,7 +302,8 @@ The primary configuration lives in `config.json`.
 - `campaigns`: valid campaign names used by `/session`
 - `characters`: keys are character names that appear in `/add`; each entry defines the sheet name, row, and embed color
 - `crit_types`: maps crit value to spreadsheet column and associated assets
-- `tim_config`: sets the Gemini model and the system prompt used for Tim’s personality
+- `tim_config.instruction` and `tim_config.temperature` — Set Tim's system prompt and response temperature
+- `tim_config.ollama` — Choose the Ollama backend, model, host, optional API key/key file, and timeout. Set `backend` to `cloud` with `host: "https://ollama.com"` for Ollama Cloud, and supply the API key through the responsible environment variable.
 
 If you want a different roster or different spreadsheet layout, this is where you change it.
 
@@ -302,7 +322,7 @@ The application will:
 - load `.env`
 - load `config.json`
 - authenticate with Google
-- initialize Gemini
+- initialize Tim's Ollama client
 - start the Discord bot
 
 If startup fails, the app logs the exception and exits.
@@ -431,9 +451,9 @@ cowsay -f ./wizard.cow hello
 
 ### Tim is not responding
 
-- Check that `GEMINI_KEY` is valid
-- Ensure your Gemini model name is supported
-- If needed, set `NO_TIM=1` to disable the model temporarily
+- For local Ollama, confirm the Ollama service is running, the host is reachable, and the configured model is available locally
+- For Ollama Cloud, check `OLLAMA_BACKEND`, the cloud host, and that `OLLAMA_API_KEY` is valid
+- Check the configured model name and review the application logs for Ollama connection errors
 
 ### Spreadsheet updates do not land in the expected cell
 
