@@ -32,7 +32,7 @@ def cow_format(message: str, pwsh_path: str, eyes: str | None = None) -> str:
         args = ["cowsay", r"-f./wizard.cow", message]
         if eyes: args.insert(2, rf"-e{eyes}")
 
-    logging.info(f"Running command {' '.join(args)}")
+    logging.info("Running command %s", " ".join(args))
     result = subprocess.run(
         args=args,
         capture_output=True,
